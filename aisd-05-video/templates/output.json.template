@@ -1,0 +1,52 @@
+{
+  "clips": [
+    {
+      "clip_id": "clip_001",
+      "shot_id": "shot_001",
+      "clip_path": "./aisd/05-video/clips/shot_001.mp4",
+      "provider": "kling",
+      "model": "kling-v2.1",
+      "mode": "first_last_frame",
+      "duration_s": 5.0,
+      "resolution": "1080x1920",
+      "aspect": "9_16",
+      "first_frame_path": "./aisd/04-storyboard/first_frames/shot_001.png",
+      "end_frame_path": "./aisd/04-storyboard/first_frames/shot_002.png",
+      "prompt": "<from queue>",
+      "negative_prompt": "<from queue>",
+      "qa_score": { "identity": 0.88, "motion": 0.79, "continuity": 0.82, "tech": 0.93 },
+      "retry_count": 0,
+      "cost_usd": 0.35,
+      "cut_marks": [],
+      "color_intent": "unspecified",
+      "speed_intent": "unspecified"
+    }
+  ],
+  "preview_video_path": "./aisd/05-video/preview.mp4",
+  "total_duration_s": 60.8,
+  "aspect": "9_16",
+  "provider_summary": {
+    "primary_provider": "kling",
+    "fallback_providers": [],
+    "calls_made": 14,
+    "total_cost_usd": 4.20
+  },
+  "compliance_tags": ["ai_generated"],
+  "stats": {
+    "clips_generated": 12,
+    "qa_pass_count": 10,
+    "qa_retry_count": 4,
+    "warning_count": 2
+  },
+  "meta": {
+    "generated_at": "<ISO 8601>",
+    "skill_version": "1.0.0",
+    "schema_version": "1.0.0",
+    "aisd_version": "0.1.0",
+    "execution_time_s": 0,
+    "user_input_summary": "<...>",
+    "upstream_inputs": [
+      { "skill": "aisd-04-storyboard", "schema_version": "1.0.0", "consumed_fields": ["shots", "total_duration_s", "aspect"] }
+    ]
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aisd/02-script",
+  "title": "aisd-02-script output schema",
+  "type": "object",
+  "required": ["structure", "beat_sheet", "scenes", "characters", "props_required", "total_duration_s", "language", "localization_targets", "meta"],
+  "properties": {
+    "structure": {
+      "type": "object",
+      "required": ["template", "act_count"],
+      "properties": {
+        "template": { "type": "string", "enum": ["3_act", "hook_twist_payoff", "kishōtenketsu", "multi_reversal", "fragment_montage", "loop"] },
+        "act_count": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "notes": { "type": "string" }
+      }
+    },
+    "beat_sheet": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["t_s", "name", "description"],
+        "properties": {
+          "t_s": { "type": "number", "minimum": 0 },
+          "name": { "type": "string", "description": "e.g. hook, inciting, escalation, climax, payoff, CTA" },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "scenes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "sequence", "location", "time_of_day", "characters_present", "duration_s", "summary", "dialogue", "shot_hints", "audio_cues"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^scene_[0-9]{3}$" },
+          "sequence": { "type": "integer", "minimum": 1 },
+          "location": { "type": "string", "description": "INT./EXT. + name, e.g. 'INT. 办公室 - 工位区'" },
+          "time_of_day": { "type": "string", "enum": ["morning", "day", "noon", "afternoon", "evening", "night", "dawn", "dusk"] },
+          "characters_present": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^char_[0-9]{3}$" }
+          },
+          "props_present": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^prop_[0-9]{3}$" }
+          },
+          "duration_s": { "type": "number", "minimum": 1 },
+          "summary": { "type": "string", "description": "One sentence: what happens in this scene" },
+          "dialogue": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "speaker", "text"],
+              "properties": {
+                "id": { "type": "string", "pattern": "^dlg_[0-9]{3}$" },
+                "speaker": { "type": "string", "pattern": "^char_[0-9]{3}$|^NARRATOR$|^OFF$" },
+                "text": { "type": "string" },
+                "language": { "$ref": "_common#/$defs/LanguageCode" },
+                "emotion": { "type": "string", "description": "happy, angry, nervous, contemptuous, deadpan, ..." },
+                "pause_before_ms": { "type": "integer", "minimum": 0 },
+                "subtext": { "type": "string" },
+                "variants": {
+                  "type": "object",
+                  "description": "phase2_hook → 06/08. Per-language dialogue text; absent when single-language.",
+                  "additionalProperties": { "type": "string" }
+                }
+              }
+            }
+          },
+          "shot_hints": {
+            "type": "array",
+            "description": "Coarse shot ideas — not authoritative. 04-storyboard makes the final list.",
+            "items": {
+              "type": "object",
+              "required": ["sequence", "intent"],
+              "properties": {
+                "sequence": { "type": "integer" },
+                "intent": { "type": "string" },
+                "camera_hint": { "type": "string", "description": "e.g. close on hands, wide reveal" },
+                "duration_hint_s": { "type": "number" }
+              }
+            }
+          },
+          "audio_cues": {
+            "type": "array",
+            "description": "phase2_hook → 06-audio. SFX/ambience/music hints for this scene.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": { "type": "string", "enum": ["sfx", "ambience", "music_in", "music_out", "music_swell", "silence"] },
+                "cue": { "type": "string" },
+                "t_s_from_scene_start": { "type": "number" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "characters": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "role", "description"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^char_[0-9]{3}$" },
+          "name": { "type": "string" },
+          "role": { "type": "string", "enum": ["lead", "co_lead", "supporting", "extra", "voice_only"] },
+          "description": { "type": "string", "description": "Visual + personality brief, used by 03-assets to generate character pack" },
+          "age_band": { "type": "string" },
+          "wardrobe": { "type": "string" },
+          "key_traits": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "props_required": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "description"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^prop_[0-9]{3}$" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "scenes_used_in": { "type": "array", "items": { "type": "string", "pattern": "^scene_[0-9]{3}$" } }
+        }
+      }
+    },
+    "total_duration_s": { "type": "number", "minimum": 1 },
+    "language": { "$ref": "_common#/$defs/LanguageCode" },
+    "localization_targets": {
+      "type": "array",
+      "items": { "$ref": "_common#/$defs/LanguageCode" },
+      "description": "Inherited from 01-topic. phase2_hook → 06/07/08."
+    },
+    "script_md_path": { "type": "string", "description": "Path to human-readable script.md" },
+    "meta": { "$ref": "_common#/$defs/Meta" }
+  }
+}

@@ -1,0 +1,38 @@
+# 质检报告 - {{ batch_id }}
+
+> 资产: `{{ asset_id }}` ({{ asset_type }}) · 检测于 {{ checked_at }}
+
+## 汇总
+
+| 总图数 | 一次通过 | 重试通过 | 警告 | 失败 |
+|---|---|---|---|---|
+| {{ total }} | {{ passed_first_try }} | {{ passed_after_retry }} | {{ warning }} | {{ failed }} |
+
+**平均分**：
+- Identity: {{ average_scores.identity }}
+- Style: {{ average_scores.style }}
+- Tech: {{ average_scores.tech }}
+
+## 详细列表
+
+| 图 | Identity | Style | Tech | Pass | Retry |
+|---|---|---|---|---|---|
+{% for d in details %}
+| `{{ d.image }}` | {{ d.scores.identity if d.scores.identity else "—" }} | {{ d.scores.style }} | {{ d.scores.tech }} | {{ "✅" if d.pass else "❌" }} | {{ d.retry }} |
+{% endfor %}
+
+{% if warnings %}
+## 警告
+
+{% for w in warnings %}
+- **{{ w.image }}**: {{ w.reason }}
+{% endfor %}
+{% endif %}
+
+{% if recommendations %}
+## 建议
+
+{% for r in recommendations %}
+- {{ r }}
+{% endfor %}
+{% endif %}

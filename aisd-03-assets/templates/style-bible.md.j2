@@ -1,0 +1,67 @@
+# 《{{ project.name }}》Style Bible
+
+> 版本: {{ style_bible.id }} · 生成于 {{ project.created_at }}
+> **这是整片美术 DNA。所有下游抽卡的 prompt 都自动携带 prefix/suffix/negative，不可绕过。**
+
+## 风格定调
+
+{{ style_bible.style_description }}
+
+类型：{{ style_bible.genre }}
+调性：{{ style_bible.tone }}
+时代：{{ style_bible.era }}
+
+## 风格参考图
+
+{% for ref in style_bible.ref_images %}
+![ref-{{ loop.index }}]({{ ref }})
+{% endfor %}
+
+## 调色板
+
+| 色块 | Hex | 角色 |
+|---|---|---|
+{% for color in style_bible.palette %}
+| ![](color-swatch://{{ color.hex }}) | `{{ color.hex }}` | {{ color.role }} |
+{% endfor %}
+
+## 光感规则
+
+{{ style_bible.lighting }}
+
+## Prompt 模板
+
+### Prefix（每条下游 prompt 自动前置）
+```
+{{ style_bible.prompt_prefix }}
+```
+
+### Suffix（每条下游 prompt 自动后置）
+```
+{{ style_bible.prompt_suffix }}
+```
+
+### Negative Prompt（统一负面词）
+```
+{{ style_bible.negative_prompt }}
+```
+
+## 镜头语言词典
+
+| 中文 | 英文（用于 prompt） |
+|---|---|
+{% for cn, en in style_bible.camera_glossary.items() %}
+| {{ cn }} | `{{ en }}` |
+{% endfor %}
+
+## 使用约束
+
+1. 所有镜头的 prompt **必须**按以下顺序拼装：
+   `[prompt_prefix] + [资产 prompt_fragment] + [镜头语言词] + [prompt_suffix]`
+2. 所有镜头的 negative 必须包含本文档的 `negative_prompt`
+3. 中文镜头描述（如"推镜"）必须查上表替换为英文
+4. 本 Style Bible 已锁定，如需修改，请在 3d-drama-assets skill 中执行 `redo style-bible`，会触发整套资产重新校对
+
+---
+
+_由 3d-drama-assets skill 生成。该文档为 Style Bible 的人读版本，机器读版本见 `assets.json` 的 `style_bible` 字段或 `_cache/m2-style-bible.json`。_

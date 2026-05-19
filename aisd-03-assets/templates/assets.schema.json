@@ -1,0 +1,232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "3d-drama-assets/assets.schema.json",
+  "title": "3D Drama Assets Manifest",
+  "type": "object",
+  "required": ["spec_version", "project", "style_bible", "characters", "scenes", "props", "prompt_assembly_rules", "downstream_contract"],
+  "properties": {
+    "spec_version": {"type": "string", "const": "1.0"},
+    "project": {
+      "type": "object",
+      "required": ["id", "name", "created_at", "script_hash"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9-]+$"},
+        "name": {"type": "string"},
+        "created_at": {"type": "string", "format": "date-time"},
+        "script_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+      }
+    },
+    "style_bible": {
+      "type": "object",
+      "required": ["id", "ref_images", "palette", "prompt_prefix", "prompt_suffix", "negative_prompt", "camera_glossary"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^style_v[0-9]+$"},
+        "ref_images": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 5,
+          "items": {"type": "string"}
+        },
+        "palette": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["hex", "role"],
+            "properties": {
+              "hex": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
+              "role": {"type": "string"}
+            }
+          }
+        },
+        "lighting": {"type": "string"},
+        "prompt_prefix": {"type": "string"},
+        "prompt_suffix": {"type": "string"},
+        "negative_prompt": {"type": "string"},
+        "camera_glossary": {
+          "type": "object",
+          "additionalProperties": {"type": "string"}
+        }
+      }
+    },
+    "characters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "tier", "ref_images", "prompt_fragment", "negative_prompt", "ref_strength_recommended"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^char_[a-z0-9_]+$"},
+          "name": {"type": "string"},
+          "tier": {"enum": ["primary", "supporting", "extra"]},
+          "ref_images": {
+            "type": "object",
+            "required": ["master"],
+            "properties": {
+              "master": {"type": "string"},
+              "views": {
+                "type": "object",
+                "properties": {
+                  "front": {"type": "string"},
+                  "side": {"type": "string"},
+                  "back": {"type": "string"}
+                }
+              },
+              "expressions": {
+                "type": "object",
+                "additionalProperties": {"type": "string"}
+              },
+              "face_details": {
+                "description": "Face-only close-ups by angle (head + neck only in frame). Distinct from full-body 'views' and half-body 'expressions'.",
+                "type": "object",
+                "properties": {
+                  "front": {"type": "string", "description": "Straight-on front face"},
+                  "side": {"type": "string", "description": "Strict side profile face"},
+                  "three_quarter": {"type": "string", "description": "Three-quarter angle face"}
+                },
+                "additionalProperties": {"type": "string"}
+              },
+              "closeup": {
+                "type": "string",
+                "description": "[DEPRECATED — use face_details.three_quarter] Legacy field, kept for backward compat."
+              }
+            }
+          },
+          "prompt_fragment": {"type": "string", "minLength": 10},
+          "negative_prompt": {"type": "string"},
+          "ref_strength_recommended": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+          "qa_scores": {
+            "type": "object",
+            "properties": {
+              "identity_avg": {"type": "number"},
+              "style_avg": {"type": "number"},
+              "tech_avg": {"type": "number"},
+              "retry_count": {"type": "integer"}
+            }
+          },
+          "versions": {
+            "description": "Per-image version history. Key matches a path in ref_images (e.g. 'master', 'views.front'). Each entry tracks one historic version stored in _v{N}_backup/.",
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["v", "path", "source"],
+                "properties": {
+                  "v": {"type": "integer", "minimum": 1},
+                  "path": {"type": "string", "description": "Relative path; current version's path matches ref_images; older versions live in _vN_backup/"},
+                  "source": {
+                    "type": "string",
+                    "description": "How this version was produced. Examples: 'generated', 'regenerated_no_ref_with_white_bg', 'edit:replace_bg:#FFFFFF', 'edit:local:the_eyes', 'edit:replace_bg:scene_apt_living'"
+                  },
+                  "edit_from_v": {"type": "integer", "description": "If source is an edit op, which prior version it derived from"},
+                  "created_at": {"type": "string", "format": "date-time"},
+                  "tokens_billed": {"type": "integer"},
+                  "estimated_cost_usd": {"type": "number"}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "scenes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "tier", "ref_images", "prompt_fragment", "negative_prompt", "ref_strength_recommended"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^scene_[a-z0-9_]+$"},
+          "name": {"type": "string"},
+          "tier": {"enum": ["primary", "secondary"]},
+          "ref_images": {
+            "type": "object",
+            "required": ["establishing"],
+            "properties": {
+              "establishing": {"type": "string"},
+              "angles": {
+                "type": "object",
+                "additionalProperties": {"type": "string"}
+              },
+              "lighting": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "establishing": {"type": "string"},
+                    "angles": {
+                      "type": "object",
+                      "additionalProperties": {"type": "string"}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "prompt_fragment": {"type": "string", "minLength": 10},
+          "negative_prompt": {"type": "string"},
+          "ref_strength_recommended": {"type": "number"},
+          "qa_scores": {"type": "object"}
+        }
+      }
+    },
+    "props": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "tier", "ref_images", "prompt_fragment"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^prop_[a-z0-9_]+$"},
+          "name": {"type": "string"},
+          "tier": {"enum": ["primary", "secondary"]},
+          "appears_in_scenes": {
+            "type": "array",
+            "items": {"type": "string", "pattern": "^scene_[a-z0-9_]+$"}
+          },
+          "held_by": {"type": "string", "pattern": "^char_[a-z0-9_]+$"},
+          "ref_images": {
+            "type": "object",
+            "properties": {
+              "master": {"type": "string"},
+              "views": {
+                "type": "object",
+                "properties": {
+                  "front": {"type": "string"},
+                  "side": {"type": "string"},
+                  "back": {"type": "string"}
+                }
+              },
+              "front": {"type": "string"}
+            }
+          },
+          "prompt_fragment": {"type": "string"},
+          "negative_prompt": {"type": "string"},
+          "ref_strength_recommended": {"type": "number"},
+          "qa_scores": {"type": "object"}
+        }
+      }
+    },
+    "prompt_assembly_rules": {
+      "type": "object",
+      "required": ["order", "separator", "negative_order", "negative_separator"],
+      "properties": {
+        "order": {
+          "type": "array",
+          "items": {"enum": ["style_prefix", "asset_fragment", "camera_directive", "style_suffix"]}
+        },
+        "separator": {"type": "string"},
+        "negative_order": {
+          "type": "array",
+          "items": {"enum": ["style_negative", "asset_negative"]}
+        },
+        "negative_separator": {"type": "string"}
+      }
+    },
+    "downstream_contract": {
+      "type": "object",
+      "required": ["binding", "fallback"],
+      "properties": {
+        "binding": {"type": "string"},
+        "fallback": {"type": "string"}
+      }
+    }
+  }
+}

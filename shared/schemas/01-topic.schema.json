@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aisd/01-topic",
+  "title": "aisd-01-topic output schema",
+  "type": "object",
+  "required": ["logline", "platform_profile", "target_audience", "competitor_cards", "topic_tags", "reference_works", "localization_targets", "meta"],
+  "properties": {
+    "logline": {
+      "type": "object",
+      "required": ["text", "language", "hook", "twist", "payoff"],
+      "properties": {
+        "text": { "type": "string", "minLength": 10, "description": "1-2 sentence pitch, in production language" },
+        "language": { "$ref": "_common#/$defs/LanguageCode" },
+        "hook": { "type": "string", "description": "What grabs attention in the first 3s" },
+        "twist": { "type": "string", "description": "The reversal" },
+        "payoff": { "type": "string", "description": "Why it's satisfying / shareable" },
+        "genre": { "type": "string", "enum": ["urban_drama", "office_drama", "romance", "comedy", "suspense", "thriller", "fantasy", "historical", "family", "rural_drama", "scifi", "horror", "documentary"] }
+      }
+    },
+    "platform_profile": {
+      "type": "object",
+      "required": ["platform", "target_duration_s", "aspect", "hook_window_s"],
+      "properties": {
+        "platform": { "type": "string", "enum": ["douyin", "tiktok", "kuaishou", "bilibili", "xhs", "youtube_shorts", "youtube", "instagram_reels", "weibo"] },
+        "target_duration_s": { "type": "number", "minimum": 8, "maximum": 600, "description": "Per platform norms: douyin 30-60s, kuaishou 60-180s, YT Shorts 30-60s, YouTube 3-10min" },
+        "aspect": { "$ref": "_common#/$defs/AspectRatio" },
+        "resolution_recommended": { "$ref": "_common#/$defs/Resolution" },
+        "hook_window_s": { "type": "number", "description": "Time before viewers swipe (platform-specific): douyin/TikTok 3, kuaishou 5, YT 8" },
+        "monetization_modes": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["ad_share", "tips", "paid_episodes", "live_redirect", "ecom_link"] }
+        },
+        "platform_quirks": {
+          "type": "array",
+          "items": { "type": "string", "description": "e.g. 'douyin penalizes static first 1.5s', 'kuaishou favors rural tone'" }
+        }
+      }
+    },
+    "target_audience": {
+      "type": "array",
+      "items": { "$ref": "_common#/$defs/AudienceProfile" },
+      "minItems": 1
+    },
+    "competitor_cards": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["id", "account_name", "platform", "key_insight"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^comp_[0-9]{3}$" },
+          "account_name": { "type": "string" },
+          "platform": { "type": "string" },
+          "url": { "type": "string", "format": "uri" },
+          "follower_band": { "type": "string", "enum": ["10k-100k", "100k-1m", "1m-10m", "10m+"] },
+          "avg_views_band": { "type": "string", "enum": ["10k-100k", "100k-1m", "1m-10m", "10m+"] },
+          "key_insight": { "type": "string", "description": "What makes them work" },
+          "hooks_used": { "type": "array", "items": { "type": "string" } },
+          "top_work_url": { "type": "string", "format": "uri" },
+          "claim_meta": { "$ref": "_common#/$defs/SourcedClaim" }
+        }
+      }
+    },
+    "topic_tags": {
+      "type": "array",
+      "minItems": 3,
+      "items": { "type": "string" },
+      "description": "Trending keywords/hashtags relevant to the logline"
+    },
+    "reference_works": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["title", "url", "why_relevant"],
+        "properties": {
+          "title": { "type": "string" },
+          "url": { "type": "string", "format": "uri" },
+          "platform": { "type": "string" },
+          "why_relevant": { "type": "string" },
+          "structure_takeaway": { "type": "string", "description": "Beat structure / hook pattern we should borrow" }
+        }
+      }
+    },
+    "localization_targets": {
+      "type": "array",
+      "items": { "$ref": "_common#/$defs/LanguageCode" },
+      "description": "phase2_hook → 06/07/08. Empty [] means single-language."
+    },
+    "shortlist_history": {
+      "type": "array",
+      "description": "Audit trail: candidates considered before user picked the final logline",
+      "items": {
+        "type": "object",
+        "required": ["text", "score"],
+        "properties": {
+          "text": { "type": "string" },
+          "score": { "type": "number", "minimum": 0, "maximum": 100 },
+          "rejected_reason": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "meta": { "$ref": "_common#/$defs/Meta" }
+  }
+}

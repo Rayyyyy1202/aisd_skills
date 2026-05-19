@@ -1,0 +1,25 @@
+# Runtime artifacts in user's cwd — never committed to this repo
+aisd/
+
+# Cache + queue per skill
+**/_cache/
+
+# Local env (provider API keys)
+.env
+.env.local
+.env.*.local
+
+# Node / Python tooling
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Optional: don't ship test runs
+test-runs/

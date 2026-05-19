@@ -1,0 +1,64 @@
+# 场景卡: {{ scene.name }}
+
+> ID: `{{ scene.id }}` · Tier: **{{ scene.tier }}** · 出场: {{ scene.appearance_count }} 个分镜
+
+## 锁定描述（prompt_fragment）
+
+```
+{{ scene.prompt_fragment }}
+```
+
+**Negative**: `{{ scene.negative_prompt }}`
+
+**推荐参考强度**: `{{ scene.ref_strength_recommended }}`
+
+## Establishing Shot
+
+下游所有机位的"空间锚点"。
+
+![establishing]({{ scene.ref_images.establishing }})
+
+{% if scene.ref_images.angles %}
+## 关键机位
+
+| {% for angle in scene.ref_images.angles.keys() %}{{ angle }} | {% endfor %}
+|{% for angle in scene.ref_images.angles.keys() %}---|{% endfor %}
+| {% for angle, path in scene.ref_images.angles.items() %}![{{ angle }}]({{ path }}) | {% endfor %}
+{% endif %}
+
+{% if scene.ref_images.lighting %}
+## 光环变体
+
+{% for time, time_data in scene.ref_images.lighting.items() %}
+### {{ time }}
+
+**Establishing - {{ time }}**
+
+![{{ time }}-establishing]({{ time_data.establishing }})
+
+{% if time_data.angles %}
+| {% for angle in time_data.angles.keys() %}{{ angle }} | {% endfor %}
+|{% for angle in time_data.angles.keys() %}---|{% endfor %}
+| {% for angle, path in time_data.angles.items() %}![{{ time }}-{{ angle }}]({{ path }}) | {% endfor %}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+## 下游引用规则
+
+下游抽卡 Agent 调用该场景时：
+
+1. 取 `prompt_fragment` 作为环境描述段
+2. 按 `(scene_id, time, angle)` 三维 key 取最贴近的 reference image：
+   - 优先：`lighting[time].angles[angle]`
+   - 退化 1：`lighting[time].establishing`（同时间，机位不匹配时）
+   - 退化 2：`angles[angle]`（机位匹配，时间未生成时）
+   - 退化 3：`establishing`（兜底）
+3. 参考强度 `{{ scene.ref_strength_recommended }}`
+4. 场景图本身**无人物**，下游合成时按角色 ID 引用合成（不要让模型在场景里随机加人）
+
+## 质检分数
+
+| Style | Tech | 重抽次数 |
+|---|---|---|
+| {{ scene.qa_scores.style_avg }} | {{ scene.qa_scores.tech_avg }} | {{ scene.qa_scores.retry_count }} |

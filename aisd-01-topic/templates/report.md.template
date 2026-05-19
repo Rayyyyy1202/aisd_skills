@@ -1,0 +1,68 @@
+# 选题报告 — {{logline.text}}
+
+> 生成时间：{{meta.generated_at}} · skill 版本：{{meta.skill_version}}
+
+## 选定 Logline
+
+> **{{logline.text}}**
+
+- 钩子 (0–{{platform_profile.hook_window_s}}s)：{{logline.hook}}
+- 反转：{{logline.twist}}
+- 付费/CTA：{{logline.payoff}}
+- 类型：`{{logline.genre}}`
+- 语种：`{{logline.language}}`
+
+## 平台画像
+
+| 字段 | 值 |
+|---|---|
+| 平台 | `{{platform_profile.platform}}` |
+| 目标时长 | {{platform_profile.target_duration_s}}s |
+| 画幅 | {{platform_profile.aspect}} ({{platform_profile.resolution_recommended}}) |
+| 钩子窗口 | {{platform_profile.hook_window_s}}s |
+| 货币化 | {{platform_profile.monetization_modes | join ", "}} |
+
+**平台规则：**
+{{#platform_profile.platform_quirks}}
+- {{.}}
+{{/platform_profile.platform_quirks}}
+
+## 目标受众
+
+{{#target_audience}}
+### {{name}} (`{{id}}`, {{size_estimate_band}})
+
+- 年龄：{{demographics.age_band}}　性别偏向：{{demographics.gender_skew}}　地域：{{demographics.geo | join ", "}}
+- 兴趣：{{psychographics.interests | join " · "}}
+- 情绪触点：{{psychographics.emotional_triggers | join " · "}}
+- 活跃平台：{{platforms | join ", "}}
+{{/target_audience}}
+
+## 对标账号
+
+| ID | 账号 | 平台 | 粉丝 | 均播 | 核心洞察 |
+|---|---|---|---|---|---|
+{{#competitor_cards}}
+| {{id}} | [{{account_name}}]({{url}}) | {{platform}} | {{follower_band}} | {{avg_views_band}} | {{key_insight}} |
+{{/competitor_cards}}
+
+## 热词
+
+{{topic_tags | map "#{}" | join " "}}
+
+## 参考作品
+
+{{#reference_works}}
+- [{{title}}]({{url}}) — {{why_relevant}}
+  - 可借鉴：{{structure_takeaway}}
+{{/reference_works}}
+
+## Shortlist 审计轨迹
+
+{{#shortlist_history}}
+- **{{score}}** — {{text}}{{#rejected_reason}} _(rejected: {{rejected_reason}})_{{/rejected_reason}}
+{{/shortlist_history}}
+
+---
+
+下一步：运行 `/aisd-02-script` 进入剧本阶段。

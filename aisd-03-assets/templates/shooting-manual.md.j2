@@ -1,0 +1,192 @@
+# 《{{ project.name }}》拍摄手册
+
+> 生成于 {{ project.created_at }} · 项目 ID: `{{ project.id }}`
+> Style Bible: `{{ style_bible.id }}` · 角色: {{ characters | length }} · 场景: {{ scenes | length }} · 道具: {{ props | length }}
+
+## 概述
+
+本手册是《{{ project.name }}》的**资产引用规范**。所有下游抽卡（视频生成）必须按本手册的拼装规则与引用约束操作。**未在本手册注册的角色名、场景名、道具名一律拒绝渲染。**
+
+---
+
+## 一、美术 DNA（Style Bible {{ style_bible.id }}）
+
+详见 `assets/style/style-bible.md`。
+
+**核心 Prompt 模板**（所有下游 prompt 必须携带）：
+
+```
+Prefix:   {{ style_bible.prompt_prefix }}
+Suffix:   {{ style_bible.prompt_suffix }}
+Negative: {{ style_bible.negative_prompt }}
+```
+
+**镜头语言词典**：
+
+| 中文 | 英文 |
+|---|---|
+{% for cn, en in style_bible.camera_glossary.items() %}
+| {{ cn }} | `{{ en }}` |
+{% endfor %}
+
+---
+
+## 二、角色名册
+
+{% for char in characters %}
+### {{ char.name }} (`{{ char.id }}`) — {{ char.tier }}
+
+![master]({{ char.ref_images.master }})
+
+**Prompt fragment**:
+```
+{{ char.prompt_fragment }}
+```
+
+详见角色卡：`docs/characters/{{ char.id }}.md`
+
+---
+{% endfor %}
+
+## 三、场景图鉴
+
+{% for scene in scenes %}
+### {{ scene.name }} (`{{ scene.id }}`) — {{ scene.tier }}
+
+![establishing]({{ scene.ref_images.establishing }})
+
+**Prompt fragment**:
+```
+{{ scene.prompt_fragment }}
+```
+
+可用 time × angle 矩阵：
+- Time variants: {{ scene.ref_images.lighting.keys() | join(", ") if scene.ref_images.lighting else "establishing only" }}
+- Angles: {{ scene.ref_images.angles.keys() | join(", ") if scene.ref_images.angles else "establishing only" }}
+
+详见场景卡：`docs/scenes/{{ scene.id }}.md`
+
+---
+{% endfor %}
+
+## 四、道具图鉴
+
+{% for prop in props %}
+### {{ prop.name }} (`{{ prop.id }}`) — {{ prop.tier }}
+
+{% if prop.ref_images.master %}
+![master]({{ prop.ref_images.master }})
+{% else %}
+![front]({{ prop.ref_images.front }})
+{% endif %}
+
+**Prompt fragment**: `{{ prop.prompt_fragment }}`
+{% if prop.held_by %}
+**Held by**: `{{ prop.held_by }}`
+{% endif %}
+{% if prop.appears_in_scenes %}
+**Appears in**: {{ prop.appears_in_scenes | join(", ") }}
+{% endif %}
+
+---
+{% endfor %}
+
+## 五、下游抽卡 Prompt 拼装规则（铁律）
+
+### 拼装公式
+
+```
+final_prompt =
+    style_bible.prompt_prefix
+  + ", " + asset.prompt_fragment
+  + ", " + camera_directive
+  + ", " + style_bible.prompt_suffix
+
+final_negative =
+    style_bible.negative_prompt
+  + ", " + asset.negative_prompt
+
+reference_images = [
+    character.ref_images[<closest to shot type>],
+    scene.ref_images[<scene_id>][<time>][<angle>],
+    prop.ref_images[<closest>] (if relevant)
+]
+```
+
+### 引用示例
+
+**示例 1：白天，公寓客厅，林清惊讶的中景**
+
+```
+asset_ids: char_lin_qing, scene_apt_living
+shot: medium shot, day, sofa area
+
+final_prompt:
+"{{ style_bible.prompt_prefix }},
+20-year-old Asian woman with shoulder-length straight black hair, beige trench coat, surprised expression,
+medium shot,
+minimalist Tokyo apartment living room, sofa area, bright daylight,
+{{ style_bible.prompt_suffix }}"
+
+reference_images:
+- characters/char_lin_qing/expressions/surprised.png
+- scenes/scene_apt_living/lighting/day/angles/sofa_close.png
+
+negative:
+"{{ style_bible.negative_prompt }}, child, elderly, blonde hair, masculine features, people in establishing"
+```
+
+**示例 2：夜晚，公寓客厅，林清持钥匙的特写**
+
+```
+asset_ids: char_lin_qing, scene_apt_living, prop_keychain
+shot: extreme close-up, night, door entry
+
+final_prompt:
+"{{ style_bible.prompt_prefix }},
+20-year-old Asian woman with shoulder-length straight black hair, beige trench coat,
+extreme close-up of hands holding a small brass keychain with a vintage carved key and a leather tag,
+night ambient lighting, warm interior glow,
+{{ style_bible.prompt_suffix }}"
+
+reference_images:
+- characters/char_lin_qing/closeup.png
+- props/prop_keychain/master.png
+- scenes/scene_apt_living/lighting/night/angles/door_entry.png
+
+negative:
+"{{ style_bible.negative_prompt }}, modern plastic key, electronic key, people in establishing"
+```
+
+### 引用约束
+
+1. **任何镜头必须引用至少 1 个角色（或显式标 `no_character: true`）+ 1 个场景**
+2. **未在本手册注册的角色名/场景名/道具名一律拒绝渲染，由人决定补登或修改剧本**
+3. **prompt prefix / suffix / negative 不能跳过、不能调换顺序**
+4. **reference image 强度按 `ref_strength_recommended` 字段**
+5. **中文镜头描述（如"推镜"）必须查"镜头语言词典"替换为英文，再注入 camera_directive 位置**
+
+### 退化策略
+
+如果下游抽卡发现 reference image 缺失（例如 `lighting.dawn` 没生成）：
+
+1. 退化到同 angle 的另一 time（优先选最相近：dawn → day）
+2. 仍缺，退化到同 time 的 establishing
+3. 仍缺，退化到 raw establishing
+4. 仍缺，上报"场景资产不足"
+
+---
+
+## 六、版本与变更
+
+- Style Bible: `{{ style_bible.id }}`
+- 剧本哈希: `{{ project.script_hash }}`
+- 不可变快照: `assets/.snapshots/v1.<timestamp>.json`
+
+**如需修改任何已锁定资产**，请回到 3d-drama-assets skill 执行：
+- `redo style-bible` — 重生成 Style Bible（会触发整套资产风格校对）
+- `redo character <char_id>` — 重生成单个角色
+- `redo scene <scene_id>` — 重生成单个场景
+- `redo prop <prop_id>` — 重生成单个道具
+
+修改后会自动 bump 版本号并保留旧快照。

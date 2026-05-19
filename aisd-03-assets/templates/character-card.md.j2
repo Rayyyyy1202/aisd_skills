@@ -1,0 +1,71 @@
+# 角色卡: {{ character.name }}
+
+> ID: `{{ character.id }}` · Tier: **{{ character.tier }}** · 出场: {{ character.appearance_count }} 次
+
+## 基本信息
+
+- 别名: {{ character.aliases | join(", ") if character.aliases else "无" }}
+- 持有道具: {{ character.held_props | join(", ") if character.held_props else "无" }}
+- 出场场景: {{ character.appears_in | join(", ") if character.appears_in else "无" }}
+
+## 锁定描述（prompt_fragment）
+
+```
+{{ character.prompt_fragment }}
+```
+
+**Negative**: `{{ character.negative_prompt }}`
+
+**推荐参考强度**: `{{ character.ref_strength_recommended }}`
+
+## 参考图
+
+### Master Shot（定调照，下游引用基准）
+
+![master]({{ character.ref_images.master }})
+
+{% if character.ref_images.views %}
+### 三视图
+
+| 正面 | 侧面 | 背面 |
+|---|---|---|
+| ![front]({{ character.ref_images.views.front }}) | ![side]({{ character.ref_images.views.side }}) | ![back]({{ character.ref_images.views.back }}) |
+{% endif %}
+
+{% if character.ref_images.expressions %}
+### 表情表
+
+| {% for emo in character.ref_images.expressions.keys() %}{{ emo }} | {% endfor %}
+|{% for emo in character.ref_images.expressions.keys() %}---|{% endfor %}
+| {% for emo, path in character.ref_images.expressions.items() %}![{{ emo }}]({{ path }}) | {% endfor %}
+{% endif %}
+
+{% if character.ref_images.closeup %}
+### 俧面特写
+
+![closeup]({{ character.ref_images.closeup }})
+{% endif %}
+
+## 下游引用规则
+
+下游抽卡 Agent 调用该角色时：
+
+1. 取 `prompt_fragment` 作为人物描述段
+2. 按当前镜头景别从 `ref_images` 取最贴近的一张作 reference image：
+   - 全景 / 中景 / 远景 → `views.front`（默认）
+   - 侧脸镜头 → `views.side`
+   - 背影 → `views.back`
+   - 情绪戏 → `expressions.<对应情绪>`
+   - 大特写 → `closeup`
+3. 参考强度按 `ref_strength_recommended` 字段（{{ character.ref_strength_recommended }}）
+4. **不允许**用文字描述代替本卡的 `prompt_fragment`
+
+## 质检分数
+
+| Identity | Style | Tech | 重抽次数 |
+|---|---|---|---|
+| {{ character.qa_scores.identity_avg }} | {{ character.qa_scores.style_avg }} | {{ character.qa_scores.tech_avg }} | {{ character.qa_scores.retry_count }} |
+
+{% if character.qa_scores.identity_avg < 0.80 %}
+⚠️ **Identity 分偏低**：该角色在跨镜头中可能出现一致性问题，建议下游主要用于远景或避免连续大特写。
+{% endif %}

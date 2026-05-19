@@ -1,0 +1,63 @@
+# {{logline.text}}
+
+> 时长 {{total_duration_s}}s · 平台 {{platform}} · 结构 `{{structure.template}}` · 语种 {{language}}
+
+## Beat Sheet
+
+| t_s | beat | description |
+|---|---|---|
+{{#beat_sheet}}
+| {{t_s}} | {{name}} | {{description}} |
+{{/beat_sheet}}
+
+## 角色
+
+| ID | 名 | 角色 | 年龄 | 简介 |
+|---|---|---|---|---|
+{{#characters}}
+| `{{id}}` | {{name}} | {{role}} | {{age_band}} | {{description}} |
+{{/characters}}
+
+## 道具
+
+{{#props_required}}
+- `{{id}}` **{{name}}** — {{description}} _(used in: {{scenes_used_in | join ", "}})_
+{{/props_required}}
+
+---
+
+{{#scenes}}
+
+## {{id}} — {{location}} ({{time_of_day}}, {{duration_s}}s)
+
+**Summary:** {{summary}}
+
+**人:** {{characters_present | join ", "}}
+**物:** {{props_present | join ", "}}
+
+### 对白
+
+{{#dialogue}}
+**[{{t_s_from_scene_start}}s]** `{{speaker}}` _({{emotion}})_ [pause {{pause_before_ms}}ms]:
+> {{text}}
+{{#subtext}}
+> _潜：{{subtext}}_
+{{/subtext}}
+
+{{/dialogue}}
+
+### Shots
+
+{{#shot_hints}}
+{{sequence}}. **{{intent}}** — `{{camera_hint}}` ({{duration_hint_s}}s)
+{{/shot_hints}}
+
+### Audio Cues
+
+{{#audio_cues}}
+- **{{t_s_from_scene_start}}s** [{{type}}] {{cue}}
+{{/audio_cues}}
+
+---
+
+{{/scenes}}

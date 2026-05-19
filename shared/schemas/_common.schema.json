@@ -1,0 +1,241 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aisd/_common",
+  "title": "aisd Skills — Shared Type Definitions",
+  "$defs": {
+    "Confidence": {
+      "type": "string",
+      "enum": ["high", "medium", "low"]
+    },
+    "Source": {
+      "type": "object",
+      "required": ["url", "accessed_at", "type"],
+      "properties": {
+        "url": { "type": "string", "format": "uri" },
+        "accessed_at": { "type": "string", "format": "date" },
+        "type": { "type": "string", "enum": ["web", "trends", "social", "competitor", "platform", "tool", "internal"] },
+        "title": { "type": "string" }
+      }
+    },
+    "SourcedClaim": {
+      "type": "object",
+      "required": ["sources", "confidence"],
+      "properties": {
+        "sources": { "type": "array", "items": { "$ref": "#/$defs/Source" }, "minItems": 1 },
+        "confidence": { "$ref": "#/$defs/Confidence" },
+        "verification_path": { "type": "string" }
+      }
+    },
+    "Money": {
+      "type": "object",
+      "required": ["amount", "currency"],
+      "properties": {
+        "amount": { "type": "number" },
+        "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+      }
+    },
+    "LanguageCode": {
+      "type": "string",
+      "pattern": "^[a-z]{2}(-[A-Z]{2})?$",
+      "description": "BCP-47, e.g. zh, zh-CN, en, en-US"
+    },
+    "AspectRatio": {
+      "type": "string",
+      "enum": ["9_16", "16_9", "1_1", "4_5", "2_35_1"]
+    },
+    "Resolution": {
+      "type": "string",
+      "pattern": "^[0-9]{3,5}x[0-9]{3,5}$",
+      "description": "WxH, e.g. 1080x1920"
+    },
+    "MediaRef": {
+      "type": "object",
+      "required": ["path"],
+      "properties": {
+        "path": { "type": "string", "description": "relative path under workspace cwd, e.g. ./aisd/03-assets/assets/characters/char_001/master.png" },
+        "checksum_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "mime": { "type": "string" }
+      }
+    },
+    "Asset": {
+      "type": "object",
+      "required": ["id", "asset_type", "name", "master_path"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^(char|scene|prop|asset|style)_[0-9]{3}$" },
+        "asset_type": { "type": "string", "enum": ["character", "scene", "prop", "style_ref"] },
+        "name": { "type": "string" },
+        "source_id": { "type": "string", "description": "Upstream ID this asset was created for (e.g. 02.characters[*].id)" },
+        "master_path": { "type": "string", "description": "Path to the canonical master image" },
+        "variants": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["variant_id", "path", "stage"],
+            "properties": {
+              "variant_id": { "type": "string" },
+              "path": { "type": "string" },
+              "stage": { "type": "string", "description": "e.g. view.front, expression.smile, scene.lighting.night" },
+              "qa_score": {
+                "type": "object",
+                "properties": {
+                  "identity": { "type": "number", "minimum": 0, "maximum": 1 },
+                  "style": { "type": "number", "minimum": 0, "maximum": 1 },
+                  "tech": { "type": "number", "minimum": 0, "maximum": 1 }
+                }
+              }
+            }
+          }
+        },
+        "negative_prompt": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    },
+    "Shot": {
+      "type": "object",
+      "required": ["id", "scene_id", "duration_s", "camera", "first_frame_path", "asset_refs"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^shot_[0-9]{3}$" },
+        "scene_id": { "type": "string", "pattern": "^scene_[0-9]{3}$" },
+        "sequence": { "type": "integer", "minimum": 1, "description": "Order within the storyboard" },
+        "duration_s": { "type": "number", "minimum": 0.5, "maximum": 30 },
+        "camera": {
+          "type": "object",
+          "required": ["shot_size", "movement"],
+          "properties": {
+            "shot_size": { "type": "string", "enum": ["xclose", "close", "medium_close", "medium", "medium_wide", "wide", "extreme_wide"] },
+            "angle": { "type": "string", "enum": ["eye", "high", "low", "dutch", "bird", "worm", "over_shoulder", "pov"] },
+            "movement": { "type": "string", "enum": ["static", "pan", "tilt", "dolly_in", "dolly_out", "tracking", "handheld", "crane", "zoom_in", "zoom_out"] },
+            "lens_mm_equiv": { "type": "integer", "minimum": 8, "maximum": 200 }
+          }
+        },
+        "composition": { "type": "string", "description": "Brief: subject position, framing intent" },
+        "first_frame_path": { "type": "string" },
+        "end_frame_path": { "type": "string", "description": "Optional — only if needed for first-last-frame video mode" },
+        "asset_refs": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^(char|scene|prop|asset)_[0-9]{3}$" },
+          "minItems": 1,
+          "description": "References into 03-assets.assets[*].id"
+        },
+        "dialogue_ref": {
+          "oneOf": [
+            { "type": "string", "pattern": "^dlg_[0-9]{3}$" },
+            { "type": "null" }
+          ]
+        },
+        "on_screen_text": { "type": "string" },
+        "sfx_marks": {
+          "type": "array",
+          "description": "phase2_hook → 06-audio. Per-shot SFX cues with timecodes.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "t_s": { "type": "number" },
+              "cue": { "type": "string" }
+            }
+          }
+        },
+        "music_intent": { "type": "string", "description": "phase2_hook → 06-audio. One-line music brief; placeholder 'TBD' allowed." },
+        "subtitle_intent": { "type": "string", "description": "phase2_hook → 07-editing. Subtitle position/style hint; 'unspecified' allowed." }
+      }
+    },
+    "Clip": {
+      "type": "object",
+      "required": ["clip_id", "shot_id", "clip_path", "provider", "duration_s"],
+      "properties": {
+        "clip_id": { "type": "string", "pattern": "^clip_[0-9]{3}$" },
+        "shot_id": { "type": "string", "pattern": "^shot_[0-9]{3}$" },
+        "clip_path": { "type": "string" },
+        "provider": { "type": "string", "enum": ["kling", "runway", "vidu", "hailuo", "minimax", "veo"] },
+        "model": { "type": "string" },
+        "mode": { "type": "string", "enum": ["text_to_video", "image_to_video", "first_last_frame"] },
+        "duration_s": { "type": "number", "minimum": 1 },
+        "resolution": { "$ref": "#/$defs/Resolution" },
+        "aspect": { "$ref": "#/$defs/AspectRatio" },
+        "first_frame_path": { "type": "string" },
+        "end_frame_path": { "type": "string" },
+        "prompt": { "type": "string" },
+        "negative_prompt": { "type": "string" },
+        "qa_score": {
+          "type": "object",
+          "properties": {
+            "identity": { "type": "number", "minimum": 0, "maximum": 1 },
+            "motion": { "type": "number", "minimum": 0, "maximum": 1 },
+            "continuity": { "type": "number", "minimum": 0, "maximum": 1 },
+            "tech": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "retry_count": { "type": "integer", "minimum": 0 },
+        "cost_usd": { "type": "number", "minimum": 0 },
+        "cut_marks": {
+          "type": "array",
+          "description": "phase2_hook → 07-editing. In/out trim suggestions.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "in_s": { "type": "number" },
+              "out_s": { "type": "number" },
+              "reason": { "type": "string" }
+            }
+          }
+        },
+        "color_intent": { "type": "string", "description": "phase2_hook → 07-editing. e.g. cinematic, anime_warm, dramatic_cool. 'unspecified' allowed." },
+        "speed_intent": { "type": "string", "description": "phase2_hook → 07-editing. e.g. 'slow-mo 0.5x at 2.0–3.5s'. 'unspecified' allowed." }
+      }
+    },
+    "AudienceProfile": {
+      "type": "object",
+      "required": ["id", "name", "demographics"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^audience_[0-9]{3}$" },
+        "name": { "type": "string" },
+        "size_estimate_band": { "type": "string", "enum": ["niche", "small", "medium", "large", "mass"] },
+        "demographics": {
+          "type": "object",
+          "properties": {
+            "age_band": { "type": "string" },
+            "gender_skew": { "type": "string", "enum": ["male", "female", "balanced", "other"] },
+            "geo": { "type": "array", "items": { "type": "string", "description": "ISO-3166 country code" } }
+          }
+        },
+        "psychographics": {
+          "type": "object",
+          "properties": {
+            "interests": { "type": "array", "items": { "type": "string" } },
+            "emotional_triggers": { "type": "array", "items": { "type": "string" } },
+            "lifestyle": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "platforms": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["douyin", "tiktok", "kuaishou", "bilibili", "xhs", "youtube_shorts", "youtube", "instagram_reels", "weibo"] }
+        }
+      }
+    },
+    "Meta": {
+      "type": "object",
+      "required": ["generated_at", "skill_version", "schema_version"],
+      "properties": {
+        "generated_at": { "type": "string", "format": "date-time" },
+        "skill_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "schema_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "aisd_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "execution_time_s": { "type": "number", "minimum": 0 },
+        "user_input_summary": { "type": "string" },
+        "upstream_inputs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["skill", "schema_version", "consumed_fields"],
+            "properties": {
+              "skill": { "type": "string" },
+              "schema_version": { "type": "string" },
+              "consumed_fields": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

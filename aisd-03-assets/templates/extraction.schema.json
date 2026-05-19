@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "3d-drama-assets/extraction.schema.json",
+  "title": "Script Extraction Result",
+  "type": "object",
+  "required": ["module", "completed_at", "characters", "scenes", "props"],
+  "properties": {
+    "module": {"const": "1-parse-script"},
+    "completed_at": {"type": "string", "format": "date-time"},
+    "stats": {
+      "type": "object",
+      "properties": {
+        "characters_count": {"type": "integer"},
+        "primary_characters": {"type": "integer"},
+        "scenes_count": {"type": "integer"},
+        "primary_scenes": {"type": "integer"},
+        "props_count": {"type": "integer"},
+        "primary_props": {"type": "integer"},
+        "estimated_total_shots": {"type": "integer"}
+      }
+    },
+    "characters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "tier", "appearance_count", "description"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^char_[a-z0-9_]+$"},
+          "name": {"type": "string"},
+          "aliases": {"type": "array", "items": {"type": "string"}},
+          "appearance_count": {"type": "integer", "minimum": 0},
+          "tier": {"enum": ["primary", "supporting", "extra"]},
+          "description": {"type": "string", "minLength": 10},
+          "key_emotions": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        }
+      }
+    },
+    "scenes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "tier", "appearance_count", "description", "time_variants"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^scene_[a-z0-9_]+$"},
+          "name": {"type": "string"},
+          "appearance_count": {"type": "integer"},
+          "tier": {"enum": ["primary", "secondary"]},
+          "description": {"type": "string", "minLength": 10},
+          "time_variants": {
+            "type": "array",
+            "items": {"enum": ["day", "night", "dawn", "dusk"]},
+            "minItems": 1
+          },
+          "weather_variants": {
+            "type": "array",
+            "items": {"enum": ["sunny", "rain", "snow", "fog", "overcast", "storm"]}
+          }
+        }
+      }
+    },
+    "props": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "tier", "description"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^prop_[a-z0-9_]+$"},
+          "name": {"type": "string"},
+          "tier": {"enum": ["primary", "secondary"]},
+          "description": {"type": "string"},
+          "appears_in_scenes": {
+            "type": "array",
+            "items": {"type": "string", "pattern": "^scene_[a-z0-9_]+$"}
+          },
+          "held_by": {"type": "string", "pattern": "^char_[a-z0-9_]+$"}
+        }
+      }
+    },
+    "shot_hint": {
+      "type": "object",
+      "properties": {
+        "total_shots": {"type": "integer"},
+        "cross_scene_transitions": {"type": "integer"}
+      }
+    }
+  }
+}

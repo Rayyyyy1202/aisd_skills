@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aisd/04-storyboard",
+  "title": "aisd-04-storyboard output schema",
+  "type": "object",
+  "required": ["shots", "first_frames_dir", "shotlist_md_path", "total_duration_s", "aspect", "meta"],
+  "properties": {
+    "shots": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "_common#/$defs/Shot" }
+    },
+    "first_frames_dir": { "type": "string", "description": "e.g. ./aisd/04-storyboard/first_frames/" },
+    "shotlist_md_path": { "type": "string" },
+    "total_duration_s": { "type": "number", "minimum": 1 },
+    "aspect": { "$ref": "_common#/$defs/AspectRatio" },
+    "stats": {
+      "type": "object",
+      "properties": {
+        "first_frames_generated": { "type": "integer" },
+        "qa_pass_count": { "type": "integer" },
+        "qa_retry_count": { "type": "integer" },
+        "warning_count": { "type": "integer" },
+        "estimated_cost_usd": { "type": "number" }
+      }
+    },
+    "meta": { "$ref": "_common#/$defs/Meta" }
+  }
+}

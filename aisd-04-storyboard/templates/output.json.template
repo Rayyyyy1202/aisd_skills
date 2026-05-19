@@ -1,0 +1,47 @@
+{
+  "shots": [
+    {
+      "id": "shot_001",
+      "scene_id": "scene_001",
+      "sequence": 1,
+      "duration_s": 3.5,
+      "camera": {
+        "shot_size": "medium",
+        "angle": "eye",
+        "movement": "dolly_in",
+        "lens_mm_equiv": 50
+      },
+      "composition": "<one-line>",
+      "first_frame_path": "./aisd/04-storyboard/first_frames/shot_001.png",
+      "asset_refs": ["char_001", "scene_001"],
+      "dialogue_ref": "dlg_001",
+      "on_screen_text": "",
+      "sfx_marks": [],
+      "music_intent": "TBD",
+      "subtitle_intent": "unspecified"
+    }
+  ],
+  "first_frames_dir": "./aisd/04-storyboard/first_frames/",
+  "shotlist_md_path": "./aisd/04-storyboard/shotlist.md",
+  "total_duration_s": 60,
+  "aspect": "9_16",
+  "stats": {
+    "first_frames_generated": 12,
+    "qa_pass_count": 11,
+    "qa_retry_count": 4,
+    "warning_count": 1,
+    "estimated_cost_usd": 1.32
+  },
+  "meta": {
+    "generated_at": "<ISO 8601>",
+    "skill_version": "1.0.0",
+    "schema_version": "1.0.0",
+    "aisd_version": "0.1.0",
+    "execution_time_s": 0,
+    "user_input_summary": "<...>",
+    "upstream_inputs": [
+      { "skill": "aisd-02-script", "schema_version": "1.0.0", "consumed_fields": ["scenes", "total_duration_s"] },
+      { "skill": "aisd-03-assets", "schema_version": "1.0.0", "consumed_fields": ["style_bible", "assets", "characters", "scenes", "props"] }
+    ]
+  }
+}

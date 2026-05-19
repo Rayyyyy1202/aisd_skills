@@ -1,0 +1,90 @@
+{
+  "logline": {
+    "text": "<选定 logline 的完整 pitch>",
+    "language": "<BCP-47, e.g. zh-CN>",
+    "hook": "<0-3s 钩子>",
+    "twist": "<反转>",
+    "payoff": "<付费/CTA>",
+    "genre": "<urban_drama | office_drama | romance | comedy | suspense | thriller | fantasy | historical | family | rural_drama | scifi | horror | documentary>"
+  },
+  "platform_profile": {
+    "platform": "<douyin | tiktok | kuaishou | bilibili | xhs | youtube_shorts | youtube | instagram_reels | weibo>",
+    "target_duration_s": 60,
+    "aspect": "9_16",
+    "resolution_recommended": "1080x1920",
+    "hook_window_s": 3,
+    "monetization_modes": ["ad_share", "ecom_link"],
+    "platform_quirks": [
+      "<硬规则 1>",
+      "<硬规则 2>",
+      "<硬规则 3>"
+    ]
+  },
+  "target_audience": [
+    {
+      "id": "audience_001",
+      "name": "<画像名>",
+      "size_estimate_band": "large",
+      "demographics": {
+        "age_band": "24-35",
+        "gender_skew": "female",
+        "geo": ["CN"]
+      },
+      "psychographics": {
+        "interests": ["<interest 1>", "<interest 2>"],
+        "emotional_triggers": ["<trigger 1>", "<trigger 2>", "<trigger 3>"],
+        "lifestyle": ["<lifestyle 1>"]
+      },
+      "platforms": ["<platform>"]
+    }
+  ],
+  "competitor_cards": [
+    {
+      "id": "comp_001",
+      "account_name": "<name>",
+      "platform": "<platform>",
+      "url": "<account url>",
+      "follower_band": "1m-10m",
+      "avg_views_band": "100k-1m",
+      "key_insight": "<one-line why-they-work>",
+      "hooks_used": ["<hook template 1>", "<hook template 2>"],
+      "top_work_url": "<work url>",
+      "claim_meta": {
+        "sources": [{ "url": "<source url>", "accessed_at": "2026-05-19", "type": "platform" }],
+        "confidence": "high"
+      }
+    }
+  ],
+  "topic_tags": ["<tag1>", "<tag2>", "<tag3>"],
+  "reference_works": [
+    {
+      "title": "<title>",
+      "url": "<url>",
+      "platform": "<platform>",
+      "why_relevant": "<one-line>",
+      "structure_takeaway": "<beat structure we should borrow>"
+    }
+  ],
+  "localization_targets": [],
+  "shortlist_history": [
+    {
+      "text": "<候选 logline 1>",
+      "score": 85,
+      "rejected_reason": null
+    },
+    {
+      "text": "<候选 logline 2>",
+      "score": 72,
+      "rejected_reason": "重叠度高"
+    }
+  ],
+  "meta": {
+    "generated_at": "<ISO-8601 datetime>",
+    "skill_version": "1.0.0",
+    "schema_version": "1.0.0",
+    "aisd_version": "0.1.0",
+    "execution_time_s": 0,
+    "user_input_summary": "<direction, platform, language>",
+    "upstream_inputs": []
+  }
+}

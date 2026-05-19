@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aisd/05-video",
+  "title": "aisd-05-video output schema",
+  "type": "object",
+  "required": ["clips", "preview_video_path", "total_duration_s", "aspect", "provider_summary", "compliance_tags", "meta"],
+  "properties": {
+    "clips": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "_common#/$defs/Clip" }
+    },
+    "preview_video_path": { "type": "string", "description": "FFmpeg-stitched preview.mp4 (no color, no audio mix)" },
+    "total_duration_s": { "type": "number", "minimum": 1 },
+    "aspect": { "$ref": "_common#/$defs/AspectRatio" },
+    "provider_summary": {
+      "type": "object",
+      "required": ["primary_provider"],
+      "properties": {
+        "primary_provider": { "type": "string", "enum": ["kling", "runway", "vidu", "hailuo", "minimax", "veo"] },
+        "fallback_providers": { "type": "array", "items": { "type": "string" } },
+        "calls_made": { "type": "integer" },
+        "total_cost_usd": { "type": "number" }
+      }
+    },
+    "compliance_tags": {
+      "type": "array",
+      "description": "phase2_hook → 07/08. e.g. ai_generated, dramatized, sponsored, age_18+. Empty [] is valid.",
+      "items": { "type": "string", "enum": ["ai_generated", "dramatized", "fictional", "sponsored", "age_18+", "age_13+", "violence_mild", "violence_strong", "ad_disclosure"] }
+    },
+    "stats": {
+      "type": "object",
+      "properties": {
+        "clips_generated": { "type": "integer" },
+        "qa_pass_count": { "type": "integer" },
+        "qa_retry_count": { "type": "integer" },
+        "warning_count": { "type": "integer" }
+      }
+    },
+    "meta": { "$ref": "_common#/$defs/Meta" }
+  }
+}

@@ -1,0 +1,42 @@
+# Shotlist
+
+> {{shots | length}} shots · 总时长 {{total_duration_s}}s · 画幅 {{aspect}}
+
+## Stats
+
+- 首帧图生成: {{stats.first_frames_generated}}
+- QA 通过: {{stats.qa_pass_count}} / 重抽: {{stats.qa_retry_count}} / Warning: {{stats.warning_count}}
+- 成本: ${{stats.estimated_cost_usd}}
+
+---
+
+{{#shots}}
+
+## {{id}} — scene `{{scene_id}}` · seq {{sequence}} · {{duration_s}}s
+
+![{{id}}]({{first_frame_path}})
+
+| 字段 | 值 |
+|---|---|
+| 景别 | `{{camera.shot_size}}` |
+| 角度 | `{{camera.angle}}` |
+| 运镜 | `{{camera.movement}}` |
+| 焦段 | {{camera.lens_mm_equiv}}mm |
+| 构图 | {{composition}} |
+| 引用资产 | {{asset_refs | join ", "}} |
+{{#dialogue_ref}}| 对白 | `{{dialogue_ref}}` |{{/dialogue_ref}}
+{{#on_screen_text}}| 字幕 | {{on_screen_text}} |{{/on_screen_text}}
+
+{{#sfx_marks.length}}
+**SFX (phase2_hook → 06-audio):**
+{{#sfx_marks}}
+- {{t_s}}s — {{cue}}
+{{/sfx_marks}}
+{{/sfx_marks.length}}
+
+**Music intent (phase2_hook → 06-audio):** {{music_intent}}
+**Subtitle intent (phase2_hook → 07-editing):** {{subtitle_intent}}
+
+---
+
+{{/shots}}

@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aisd/03-assets",
+  "title": "aisd-03-assets output schema",
+  "type": "object",
+  "required": ["style_bible", "assets", "characters", "scenes", "props", "shouce_md_path", "meta"],
+  "properties": {
+    "style_bible": {
+      "type": "object",
+      "required": ["name", "refs", "palette", "art_direction"],
+      "properties": {
+        "name": { "type": "string", "description": "e.g. '都市霓虹半写实', 'cel-shaded anime'" },
+        "refs": {
+          "type": "array",
+          "minItems": 1,
+          "description": "1-3 master reference images for style. Every first-frame call passes these as references.",
+          "items": { "$ref": "_common#/$defs/MediaRef" }
+        },
+        "palette": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+          "minItems": 3
+        },
+        "art_direction": { "type": "string", "description": "1-2 paragraph art-direction brief; gets prepended to every prompt" },
+        "negative_prompt": { "type": "string", "description": "Universal negative terms (e.g. text, watermark, extra fingers)" },
+        "aspect": { "$ref": "_common#/$defs/AspectRatio" }
+      }
+    },
+    "assets": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "_common#/$defs/Asset" }
+    },
+    "characters": {
+      "type": "array",
+      "description": "Character-typed assets, with per-character extras",
+      "items": {
+        "allOf": [
+          { "$ref": "_common#/$defs/Asset" },
+          {
+            "properties": {
+              "asset_type": { "const": "character" },
+              "views": {
+                "type": "array",
+                "description": "Three-view (front/side/back) + key expressions + close-up",
+                "items": {
+                  "type": "object",
+                  "required": ["view_id", "path"],
+                  "properties": {
+                    "view_id": { "type": "string", "description": "e.g. view.front, expression.smile, closeup" },
+                    "path": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "scenes": {
+      "type": "array",
+      "description": "Scene-typed assets: establishing shot + multiple angles + day/night light variants",
+      "items": {
+        "allOf": [
+          { "$ref": "_common#/$defs/Asset" },
+          {
+            "properties": {
+              "asset_type": { "const": "scene" },
+              "angles": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["angle_id", "path"],
+                  "properties": {
+                    "angle_id": { "type": "string", "description": "e.g. angle.kitchen_pov, lighting.night.angle.entry" },
+                    "path": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "props": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          { "$ref": "_common#/$defs/Asset" },
+          { "properties": { "asset_type": { "const": "prop" } } }
+        ]
+      }
+    },
+    "shouce_md_path": {
+      "type": "string",
+      "description": "Path to 拍摄手册.md (production handbook for human reference)"
+    },
+    "stats": {
+      "type": "object",
+      "properties": {
+        "images_generated": { "type": "integer" },
+        "qa_pass_count": { "type": "integer" },
+        "qa_retry_count": { "type": "integer" },
+        "warning_count": { "type": "integer" },
+        "estimated_cost_usd": { "type": "number" }
+      }
+    },
+    "meta": { "$ref": "_common#/$defs/Meta" }
+  }
+}
