@@ -387,34 +387,27 @@ export const saveMemory = (projectId: string, key: string, content: string): Pro
 export const deleteMemory = (id: string): Promise<{ ok: true }> =>
   getJSON(`/memories/${id}`, { method: 'DELETE' });
 
-// ─── Asset library (skill 04) ───────────────────────────────────────────
+// ─── Asset library (skill 03) ───────────────────────────────────────────
 
-export type AssetSource = 'ai_generated' | 'user_uploaded' | 'shot' | 'stock';
-export type AssetStatus = 'brief' | 'stub' | 'shot' | 'retouched' | 'approved';
+export type AssetType = 'character' | 'scene' | 'prop' | 'style_ref';
+
+export interface AssetVariant {
+  variant_id: string;
+  path: string;
+  stage: string;
+  qa_score?: { identity?: number; style?: number; tech?: number };
+}
 
 export interface AssetRecord {
   id: string;
-  type: 'image' | 'video' | 'copy' | 'hook' | 'audio';
-  purpose: string;
-  channel: string;
-  language: string;
-  format?: string;
-  sku_id?: string;
-  audience_ids?: string[];
-  source?: AssetSource;
-  auto_tagged?: boolean;
-  uploaded_at?: string;
-  file_path?: string;
-  delivered_file_path?: string;
-  width?: number;
-  height?: number;
-  alt_text?: string;
-  prompt_used?: string;
-  approved?: boolean;
-  status?: AssetStatus;
-  shoot_brief_md_path?: string;
-  size_bytes?: number;
-  text_content?: string;
+  asset_type: AssetType;
+  name: string;
+  /** upstream id this asset was generated for (02 char/scene/prop id) */
+  source_id?: string;
+  master_path: string;
+  variants?: AssetVariant[];
+  negative_prompt?: string;
+  notes?: string;
 }
 
 export interface AssetListResponse {
@@ -422,7 +415,6 @@ export interface AssetListResponse {
   output_exists: boolean;
   output_path?: string;
   workspace: string;
-  naming_convention?: { pattern: string; example: string } | null;
   schema_path?: string | null;
 }
 

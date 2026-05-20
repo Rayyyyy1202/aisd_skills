@@ -14,27 +14,13 @@ export interface AssetRoutesDeps {
 
 interface AssetRecord {
   id: string;
-  type: string;
-  purpose: string;
-  channel: string;
-  language: string;
-  format?: string;
-  sku_id?: string;
-  audience_ids?: string[];
-  source?: string;
-  auto_tagged?: boolean;
-  uploaded_at?: string;
-  file_path?: string;
-  delivered_file_path?: string;
-  width?: number;
-  height?: number;
-  alt_text?: string;
-  prompt_used?: string;
-  approved?: boolean;
-  status?: string;
-  shoot_brief_md_path?: string;
-  size_bytes?: number;
-  text_content?: string;
+  asset_type: string;
+  name: string;
+  source_id?: string;
+  master_path: string;
+  variants?: Array<Record<string, unknown>>;
+  negative_prompt?: string;
+  notes?: string;
 }
 
 interface OutputBundle {
@@ -42,24 +28,9 @@ interface OutputBundle {
   [k: string]: unknown;
 }
 
-const SAFE_FIELDS: ReadonlyArray<keyof AssetRecord> = [
-  'type',
-  'purpose',
-  'channel',
-  'language',
-  'format',
-  'sku_id',
-  'audience_ids',
-  'source',
-  'auto_tagged',
-  'uploaded_at',
-  'alt_text',
-  'status',
-  'approved',
-  'delivered_file_path',
-  'width',
-  'height',
-];
+// Only human-editable metadata is patchable; ids, paths and asset_type are
+// produced by skill 03 and must stay stable for downstream references.
+const SAFE_FIELDS: ReadonlyArray<keyof AssetRecord> = ['name', 'notes', 'negative_prompt'];
 
 // .svg intentionally excluded: SVGs can carry <script> and would execute as
 // stored XSS when served inline. Drama assets are raster (gpt-image-1) + video.
