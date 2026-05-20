@@ -11,11 +11,11 @@ export interface SkillFrontmatter {
 }
 
 export interface SkillRecord {
-  /** "01", "03b", "07a", "13" */
+  /** "01", "02", … "09" */
   id: string;
-  /** "'aisd'-01-research" */
+  /** "aisd-01-topic" */
   fullName: string;
-  /** "research", "project-identity" */
+  /** "topic", "script", "storyboard" */
   slug: string;
   /** "main" | "side" — main chain is 01..09, rest are side */
   tier: 'main' | 'side';

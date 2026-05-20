@@ -32,6 +32,17 @@ const DESIGN_INTAKE_EVENT = 'design-intake:pick';
 const JUMP_INTAKE_MARKER = '[JUMP_INTAKE]';
 const JUMP_INTAKE_EVENT = 'jump-intake:pick';
 
+/** Parse a JSON-array column, returning [] on null/empty/malformed input. */
+function safeJsonArray<T>(raw: string | null): T[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as T[]) : [];
+  } catch {
+    return [];
+  }
+}
+
 interface JumpIntakeField {
   key: string;
   label: string;
@@ -55,34 +66,34 @@ interface DesignPreset {
 
 const DESIGN_PRESETS: DesignPreset[] = [
   {
-    id: 'minimalist',
-    label: 'Minimalist',
-    blurb: '大量留白 · 单色 · 几何（Aesop / Apple）',
-    swatch: ['#FFFFFF', '#1A1A1A', '#9C9C9C'],
+    id: 'half-realistic-urban',
+    label: '半写实都市',
+    blurb: '接近真人剧 · 低饱和冷调 · 浅景深（都市/职场/悬疑）',
+    swatch: ['#0A0E1A', '#1A2440', '#D4AF37'],
   },
   {
-    id: 'editorial',
-    label: 'Editorial',
-    blurb: '杂志式 · 大标题 · 产品叙事（Glossier）',
-    swatch: ['#F5EFE7', '#2B2B2B', '#C97B63'],
+    id: 'cel-anime',
+    label: '国漫风',
+    blurb: 'cel-shaded · 干净线条 · 明快色块（古风/玄幻/校园）',
+    swatch: ['#1E3A5F', '#F2C14E', '#E84A5F'],
   },
   {
-    id: 'bold-graphic',
-    label: 'Bold Graphic',
-    blurb: '撞色 · 粗字体 · 大胆几何（Liquid Death）',
-    swatch: ['#FF3B30', '#0E1A2B', '#FFD400'],
+    id: 'painterly-cinematic',
+    label: '厚涂电影感',
+    blurb: '油画笔触 · 强光影 · 戏剧打光（年代/复仇/史诗）',
+    swatch: ['#1A120B', '#8C5A2B', '#D9B382'],
   },
   {
-    id: 'luxury-serif',
-    label: 'Luxury Serif',
-    blurb: '衬线 · 深底 · 金色点缀（Diptyque）',
-    swatch: ['#0A0A0A', '#C9A14A', '#E9E0CE'],
+    id: 'jp-animation',
+    label: '日系动画',
+    blurb: '通透色彩 · 柔光 · 清新（恋爱/治愈/日常）',
+    swatch: ['#FFE9EC', '#9BD3DD', '#5B6C8F'],
   },
   {
-    id: 'playful-illustrated',
-    label: 'Playful Illustrated',
-    blurb: '手绘插画 · 温暖色 · 生活化（Mailchimp）',
-    swatch: ['#FFE066', '#5B8DEF', '#3D2C2E'],
+    id: 'dark-realistic',
+    label: '暗黑写实',
+    blurb: '高对比 · 冷峻 · 阴影重（惊悚/犯罪/末世）',
+    swatch: ['#0B0B0F', '#3A3F4B', '#B80C2C'],
   },
 ];
 
@@ -449,33 +460,7 @@ export default function ChatPanel({ conversationId, seedPrompt, onConversationRe
     }
   };
 
-  // Voice control hooks: when voice has already POSTed an approval decision
-  // server-side, drop the head from our local queue and fire the canned
-  // follow-up chat message so the orchestrator proceeds.
-  useEffect(() => {
-    const onNext = (e: Event) => {
-      const detail = (e as CustomEvent<{ skill_id?: string; decision?: string; note?: string }>).detail ?? {};
-      const skillId = detail.skill_id;
-      const decision = detail.decision ?? 'approved';
-      setPendingApprovals((q) => {
-        if (!skillId) return q.slice(1);
-        const idx = q.findIndex((p) => p.skill_id === skillId);
-        if (idx < 0) return q;
-        return [...q.slice(0, idx), ...q.slice(idx + 1)];
-      });
-      if (!skillId) return;
-      if (decision === 'modified_rerun') {
-        const note = (detail.note ?? '').trim();
-        void sendChat(`请按以下修改重跑 ${skillId}：${note}`, []);
-      } else if (decision === 'approved') {
-        setLastApproved(skillId);
-        setTimeout(() => setLastApproved((s) => (s === skillId ? null : s)), 3000);
-        void sendChat(`已批准 ${skillId}，请继续下一步`, []);
-      }
-    };
-    // voice bus removed; the approval-confirmation effect now exits early
-    return undefined;
-  }, [sendChat]);
+  // (voice-driven approval-confirmation effect removed with the voice subsystem)
 
   useEffect(() => {
     const onPick = (e: Event) => {
@@ -688,9 +673,12 @@ function MessageBubble({
 }) {
   const role = message.role;
   const avatar = role === 'user' ? 'U' : role === 'assistant' ? 'A' : role === 'tool' ? 'T' : 'S';
-  const attIds: string[] = message.attachments_json ? JSON.parse(message.attachments_json) : [];
-  const toolCalls: Array<{ id: string; type: string; function: { name: string; arguments: string } }> =
-    message.tool_calls_json ? JSON.parse(message.tool_calls_json) : [];
+  // Persisted JSON columns can be malformed (truncated SSE, schema migration).
+  // A bad parse must not take down the whole chat stream — fall back to empty.
+  const attIds = safeJsonArray<string>(message.attachments_json);
+  const toolCalls = safeJsonArray<{ id: string; type: string; function: { name: string; arguments: string } }>(
+    message.tool_calls_json,
+  );
   const showTokens = role === 'assistant' && message.total_tokens != null;
 
   return (
@@ -1047,7 +1035,7 @@ function DesignIntakeCard({ rawBody }: { rawBody: string }) {
             key={p.id}
             className="design-preset"
             onClick={() => pick(`选 ${p.id} 风格 —— ${p.blurb}`)}
-            data-magic={`选 ${p.label} 风格，告诉 agent 接下来 05 建站按这个调性来`}
+            data-magic={`选 ${p.label} 风格，告诉 agent 接下来 03 资产(Style Bible)按这个画风来`}
           >
             <div className="design-preset-swatch">
               {p.swatch.map((c, i) => (
@@ -1075,7 +1063,7 @@ function DesignIntakeCard({ rawBody }: { rawBody: string }) {
               setFreeText('');
             }
           }}
-          data-magic="自由描述风格，或者贴一个参考网站 URL；agent 会按这个走 05 建站"
+          data-magic="自由描述风格，或者贴一个参考网站 URL；agent 会按这个走 03 资产生成"
         />
         <button
           type="button"
@@ -1264,7 +1252,7 @@ function ApprovalCard({
             className="btn-primary"
             onClick={onApprove}
             disabled={busy}
-            data-magic="这一步的产出 OK，让 agent 继续做下一步；同时会自动刷新品牌长期记忆 (project profile)"
+            data-magic="这一步的产出 OK，让 agent 继续做下一步；同时会自动刷新项目长期记忆 (project profile)"
           >
             {busy ? '处理中…' : '批准 → 下一步'}
           </button>

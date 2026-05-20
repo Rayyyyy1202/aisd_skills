@@ -80,7 +80,7 @@ class FakeCustomEvent {
 
 const magicEls: Array<{ text: string; classes: Set<string> }> = [
   { text: '批准 → 下一步', classes: new Set() },
-  { text: '新建品牌', classes: new Set() },
+  { text: '新建项目', classes: new Set() },
   { text: '上传文件给 agent', classes: new Set() },
 ];
 const doc = {

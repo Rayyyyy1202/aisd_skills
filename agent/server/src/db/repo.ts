@@ -106,16 +106,25 @@ export class Repo {
       .all() as Project[];
   }
 
+  private static readonly PROJECT_UPDATABLE_COLS: ReadonlySet<string> = new Set([
+    'name',
+    'workspace',
+    'project_brief',
+  ]);
+
   updateProject(id: string, fields: Partial<Pick<Project, 'name' | 'workspace' | 'project_brief'>>): Project | null {
     const sets: string[] = [];
     const values: unknown[] = [];
     for (const [k, v] of Object.entries(fields)) {
+      // Column name is interpolated into SQL — only allow a fixed allowlist so a
+      // crafted request body key (e.g. __proto__) can never become a SQL fragment.
+      if (!Repo.PROJECT_UPDATABLE_COLS.has(k)) continue;
       sets.push(`${k} = ?`);
       values.push(v);
     }
     if (sets.length === 0) return this.getProject(id);
     values.push(id);
-    this.db.prepare(`UPDATE projects SET ${sets.join(', ')} WHERE id = ?`).run(...(values as never[]));
+    this.db.prepare(`UPDATE projects SET ${sets.join(', ')} WHERE id = ?`).run(...(values as unknown[]));
     return this.getProject(id);
   }
 
@@ -290,17 +299,21 @@ export class Repo {
     return (this.db.prepare(`SELECT * FROM tasks WHERE id = ?`).get(id) as TaskRow) ?? null;
   }
 
+  private static readonly TASK_UPDATABLE_COLS: ReadonlySet<string> = new Set(['title', 'status', 'notes']);
+
   updateTask(id: string, fields: Partial<Pick<TaskRow, 'title' | 'status' | 'notes'>>): TaskRow | null {
     const sets: string[] = [];
     const values: unknown[] = [];
     for (const [k, v] of Object.entries(fields)) {
+      // Column-name allowlist — never let a request-body key become raw SQL.
+      if (!Repo.TASK_UPDATABLE_COLS.has(k)) continue;
       sets.push(`${k} = ?`);
       values.push(v);
     }
     if (sets.length === 0) return this.getTask(id);
     sets.push(`updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now')`);
     values.push(id);
-    this.db.prepare(`UPDATE tasks SET ${sets.join(', ')} WHERE id = ?`).run(...(values as never[]));
+    this.db.prepare(`UPDATE tasks SET ${sets.join(', ')} WHERE id = ?`).run(...(values as unknown[]));
     return this.getTask(id);
   }
 

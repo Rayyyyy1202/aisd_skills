@@ -3,21 +3,15 @@
 // never used the app before. Keep terminology consistent with the rest of the UI.
 
 export const SKILL_BLURBS: Record<string, string> = {
-  '01': '01 市场调研：找出要做的赛道、用户痛点、竞品和机会方向',
-  '02': '02 选品：从调研结果里筛出 1-3 个具体 SKU + 定价区间',
-  '03': '03 品牌识别：定品牌名、视觉风格、调性 / tone of voice',
-  '03b': '03b 素材工厂：把品牌识别落成可复用的图片/banner/产品图素材',
-  '04': '04 建站：生成站点骨架（首页 / 产品页 / 关于）+ 模板化文案',
-  '04b': '04b 建站补充：扩展页面、组件、表单等',
-  '05': '05 追踪埋点：装 GA / Pixel / 自有事件，让后面的投放能复盘',
-  '05b': '05b 追踪补充：补充 server-side 事件、转化目标',
-  '06': '06 SEO + 内容：技术 SEO + 博客内容规划',
-  '07a': '07a 技术 SEO：站点结构、meta、sitemap、性能',
-  '07b': '07b 内容营销：博客主题、关键词、节奏',
-  '08': '08 投流：选平台、试投、优化 ROAS',
-  '09': '09 持续优化：根据数据迭代页面 / 文案 / 投放',
-  '11b': '11b 履约/客服：订单后续流程',
-  '13': '13 邮件 / CRM：留存、复购、生命周期营销',
+  '01': '01 选题：定 logline、平台/时长画像、对标账号、目标受众',
+  '02': '02 剧本：把 logline 拆成 scenes + 对白 + 节拍 + 镜头建议',
+  '03': '03 资产：锁定角色/场景/道具 + Style Bible，供下游强引用',
+  '04': '04 分镜首帧：切镜头并为每个 shot 生成首帧图',
+  '05': '05 视频生成：用首帧调视频 API 出片段，拼 preview.mp4',
+  '06': '06 音频（Phase 2）：对白 TTS + 音效 + 配乐',
+  '07': '07 剪辑（Phase 2）：调色 + 超分 + 合规标识',
+  '08': '08 分发（Phase 2）：发布 + 投流 + 本地化',
+  '09': '09 数据回流（Phase 2）：拉播放数据归因，反馈给选题/剧本',
 };
 
 export const STATUS_BLURBS: Record<string, string> = {
@@ -31,7 +25,7 @@ export const STATUS_BLURBS: Record<string, string> = {
 export const INSPECTOR_TAB_BLURBS = {
   tasks: '任务：当前对话里 agent 自己列出的 todo / 子任务',
   tools: '工具调用：每一步 agent 调了什么工具、传了什么参数、返回什么',
-  pipeline: '流程：右侧 mini 视图，看 9 个核心 skill 当前各是什么状态',
+  pipeline: '流程：右侧 mini 视图，看 9 个 skill 当前各是什么状态（06-09 为 Phase 2）',
 } as const;
 
 export const PRIORITY_BLURBS: Record<string, string> = {

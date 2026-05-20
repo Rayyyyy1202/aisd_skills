@@ -66,7 +66,7 @@ export default function MemoryPage() {
           <button
             className="btn-primary"
             onClick={() => setShowAdd(true)}
-            data-magic="手动给当前品牌加一条记忆；之后跟 agent 聊天它会自动带上"
+            data-magic="手动给当前项目加一条记忆；之后跟 agent 聊天它会自动带上"
           >
             + New memory
           </button>

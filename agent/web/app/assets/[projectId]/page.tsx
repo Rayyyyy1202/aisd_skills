@@ -609,9 +609,9 @@ function EmptyOutput({
   const inputRef = useRef<HTMLInputElement>(null);
   return (
     <div className="al-empty">
-      <div style={{ fontSize: 16, marginBottom: 8 }}>这个品牌还没有 04 素材产出</div>
+      <div style={{ fontSize: 16, marginBottom: 8 }}>这个项目还没有 03 资产产出</div>
       <p style={{ color: 'var(--fg-muted)' }}>
-        在对话里跑一次 <code>04 素材工厂</code>，或先把已有素材丢进来让 AI 帮你打标。
+        在对话里跑一次 <code>03 资产</code>（角色 / 场景 / 道具 + Style Bible），或先把参考图丢进来。
       </p>
       <input
         ref={inputRef}

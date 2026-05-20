@@ -111,7 +111,7 @@ export default function Sidebar({ activeConversationId, activeProjectId, onActiv
             title="New project"
             onClick={() => setShowProjectModal(true)}
             aria-label="New project"
-            data-magic="新建品牌：会建一个独立的 workspace 文件夹，存这个品牌所有的对话、调研、产物"
+            data-magic="新建项目：会建一个独立的 workspace 文件夹，存这个项目所有的对话、产出、素材"
           >
             +
           </button>
@@ -139,7 +139,7 @@ export default function Sidebar({ activeConversationId, activeProjectId, onActiv
                   else if (choice === 'd') handleArchiveProject(b);
                 }}
                 title="Right-click for actions"
-                data-magic="一个品牌的所有对话和产物都收在这里。点击展开，右键改名 / 归档"
+                data-magic="一个项目的所有对话和产物都收在这里。点击展开，右键改名 / 归档"
               >
                 <span className="project-avatar">{b.name.slice(0, 1).toUpperCase()}</span>
                 <span className="project-name">{b.name}</span>
@@ -207,22 +207,10 @@ export default function Sidebar({ activeConversationId, activeProjectId, onActiv
           className="footer-link"
           onClick={() => {
             const target = activeProjectId ?? defaultProjectId ?? projects[0]?.id;
-            if (target) router.push(`/build-plan/${target}`);
-          }}
-          title={activeProjectId ?? defaultProjectId ? 'Open build plan' : 'No project selected'}
-          data-magic="Build Plan：站点结构 + 文案的可视化编辑器，最终会生成站点代码"
-        >
-          <span className="icon">▤</span>
-          <span>Build Plan</span>
-        </div>
-        <div
-          className="footer-link"
-          onClick={() => {
-            const target = activeProjectId ?? defaultProjectId ?? projects[0]?.id;
             if (target) router.push(`/assets/${target}`);
           }}
           title={activeProjectId ?? defaultProjectId ? 'Open asset library' : 'No project selected'}
-          data-magic="素材库：当前品牌产生的图片 / banner / 产品图，可按用途/渠道筛"
+          data-magic="素材库：当前项目产生的图片 / banner / 产品图，可按用途/渠道筛"
         >
           <span className="icon">◇</span>
           <span>素材库</span>
@@ -230,7 +218,7 @@ export default function Sidebar({ activeConversationId, activeProjectId, onActiv
         <div
           className="footer-link"
           onClick={() => router.push('/memory')}
-          data-magic="Memory：品牌长期记忆库（key-value 笔记），所有对话都能查到"
+          data-magic="Memory：项目长期记忆库（key-value 笔记），所有对话都能查到"
         >
           <span className="icon">◆</span>
           <span>Memory</span>

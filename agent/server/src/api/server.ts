@@ -3,7 +3,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { streamSSE } from 'hono/streaming';
 import { serve } from '@hono/node-server';
-import { resolve, dirname } from 'node:path';
+import { resolve, dirname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readFileSync, existsSync, writeFileSync, mkdirSync, statSync } from 'node:fs';
 import { SkillRegistry, type SkillNode } from '../skills/registry.ts';
@@ -16,11 +16,11 @@ import { openDatabase } from '../db/schema.ts';
 import { Repo } from '../db/repo.ts';
 import { seedDefaultProject } from '../db/bootstrap.ts';
 import { mountChatRoutes } from './chat.ts';
-// spec routes removed — 'aisd'-specific site-spec subsystem N/A for aisd
+// spec routes removed — aisd-specific site-spec subsystem N/A for aisd
 import { mountDistillRoutes } from './distill.ts';
 import { mountAssetRoutes } from './assets.ts';
 import { mountIntegrationsRoutes } from './integrations.ts';
-// realtime voice removed — 'aisd'-specific askme voice subsystem N/A for aisd
+// realtime voice removed — aisd-specific askme voice subsystem N/A for aisd
 
 // derive repo root from this file's location: agent/server/src/api/server.ts → ../../../..
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -44,7 +44,11 @@ const repo = new Repo(db);
 const defaultProjectId = seedDefaultProject(repo, WORKSPACE_PATH);
 
 const app = new Hono();
-app.use('*', cors());
+// Browser traffic reaches this server only through the Next.js proxy (same-origin
+// to :4000), so CORS can stay locked to the local web origin. AISD_WEB_ORIGIN lets
+// you override when running the web app on a non-default port.
+const WEB_ORIGIN = process.env.AISD_WEB_ORIGIN ?? 'http://localhost:4000';
+app.use('*', cors({ origin: WEB_ORIGIN, credentials: true }));
 
 // ─── helpers ─────────────────────────────────────────────────────────────
 
@@ -60,7 +64,21 @@ function workspaceFromHeaderOrDefault(c: { req: { header(k: string): string | un
   return workspaceForProject(id);
 }
 
-function skillSummary(s: SkillNode) {
+interface SkillSummaryPayload {
+  id: string;
+  full_name: string;
+  slug: string;
+  tier: 'main' | 'side';
+  description: string;
+  argument_description: string | null;
+  upstream_required: string[];
+  upstream_optional: string[];
+  schema_path: string | null;
+  module_count: number;
+  phase2_placeholder: boolean;
+}
+
+function skillSummary(s: SkillNode): SkillSummaryPayload {
   return {
     id: s.id,
     full_name: s.fullName,
@@ -72,6 +90,7 @@ function skillSummary(s: SkillNode) {
     upstream_optional: s.upstreamOptional,
     schema_path: s.schemaPath,
     module_count: s.modulePaths.length,
+    phase2_placeholder: s.phase2Placeholder,
   };
 }
 
@@ -80,11 +99,8 @@ function skillSummary(s: SkillNode) {
 app.get('/health', (c) =>
   c.json({
     ok: true,
-    repo_root: REPO_ROOT,
-    default_workspace: WORKSPACE_PATH,
     default_project_id: defaultProjectId,
     llm_ready: llm !== null,
-    db_path: DB_PATH,
     default_model: OPENAI_MODEL,
     available_models: ['gpt-4o', 'gpt-5.4'],
   }),
@@ -107,13 +123,24 @@ app.get('/skills/:id', (c) => {
 
 app.get('/projects', (c) => c.json({ projects: repo.listProjects(), default_project_id: defaultProjectId }));
 
+/** A workspace must resolve to a path inside REPO_ROOT — never /etc, /home, etc. */
+function workspaceInsideRoot(abs: string): boolean {
+  return abs === REPO_ROOT || abs.startsWith(REPO_ROOT + sep);
+}
+
 app.post('/projects', async (c) => {
   const body = await c.req.json().catch(() => ({}));
   const { name, workspace, project_brief } = body as { name?: string; workspace?: string; project_brief?: string };
   if (!name || !name.trim()) return c.json({ error: 'name is required' }, 400);
-  const wsAbs = workspace && workspace.trim()
-    ? resolve(workspace.trim())
-    : deriveWorkspace(name.trim());
+  let wsAbs: string;
+  if (workspace && workspace.trim()) {
+    wsAbs = resolve(workspace.trim());
+    if (!workspaceInsideRoot(wsAbs)) {
+      return c.json({ error: 'workspace must be inside the repo root' }, 400);
+    }
+  } else {
+    wsAbs = deriveWorkspace(name.trim());
+  }
   const project = repo.createProject(name.trim(), wsAbs, project_brief);
   return c.json(project, 201);
 });
@@ -144,9 +171,16 @@ app.patch('/projects/:id', async (c) => {
     workspace: string;
     project_brief: string;
   }>;
+  let workspaceAbs: string | undefined;
+  if (body.workspace !== undefined) {
+    workspaceAbs = resolve(body.workspace);
+    if (!workspaceInsideRoot(workspaceAbs)) {
+      return c.json({ error: 'workspace must be inside the repo root' }, 400);
+    }
+  }
   const updated = repo.updateProject(c.req.param('id'), {
     ...(body.name !== undefined && { name: body.name }),
-    ...(body.workspace !== undefined && { workspace: resolve(body.workspace) }),
+    ...(workspaceAbs !== undefined && { workspace: workspaceAbs }),
     ...(body.project_brief !== undefined && { project_brief: body.project_brief }),
   });
   if (!updated) return c.json({ error: 'not found' }, 404);
@@ -415,7 +449,7 @@ mountAssetRoutes(app, { repo, registry, validator });
 
 mountIntegrationsRoutes(app);
 
-// build-plan / spec / realtime-voice routes removed ('aisd'-specific)
+// build-plan / spec / realtime-voice routes removed (aisd-specific)
 
 serve({ fetch: app.fetch, port: PORT }, (info) => {
   console.log(`[agent] server listening on http://localhost:${info.port}`);

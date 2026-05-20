@@ -20,17 +20,15 @@ export interface StubReport {
   errors?: Array<{ path: string; message: string }>;
 }
 
+// Domain hints for synthetic upstream stubs (aisd short-drama pipeline).
+// Only 01-04 are ever auto-stubbed as upstream; 05 is terminal in P0 and
+// 06-09 are Phase 2 placeholders that never run.
 const STUB_HINTS: Record<string, string> = {
-  '01': 'Project research. Required: niche, target_audience (≥1 profile), competitors (≥1), market_signals. URL placeholders allowed (https://example.com/...). Set claim_meta.sources=[] for synthetic claims.',
-  '02': 'Product selection. Emit ≥1 SKU with id, name, retail_price (number), margin_pct (number 0-1), weight_g, MOQ, lead_time_days, supplier { name, country, lead_time_days }. Mark each SKU with synthetic:true.',
-  '03': 'Project identity. tagline, mission, palette (≥3 hex colors), typography (1 pair), tone_voice, cs_tone, welcome_offer.',
-  '04': 'Creative factory. ≥1 hero asset brief (kind=photo|video|illustration), ≥1 copy_block, asset_coverage_matrix mapping audience×channel.',
-  '05': 'Site build. site_url=https://example.com, routes=[{path:"/",template:"home"},{path:"/products/sample",template:"product"}], analytics_endpoints={}, repo_path=null.',
-  '06': 'Tracking. Emit the 13 required events (page_view, view_item, add_to_cart, begin_checkout, purchase, search, view_item_list, view_promotion, select_promotion, sign_up, login, generate_lead, refund). destinations=[], consent_mode="v2_default_denied", site_build_writeback={rebuild_executed:true,post_rebuild_validation_status:"pass"}.',
-  '07a': 'Tech SEO. crawl_summary, sitemap_status, robots_txt_status, schema_markup_audit, page_speed_audit (≥1 page).',
-  '07b': 'Content marketing. content_calendar (≥1 entry), keyword_strategy, distribution_plan.',
-  '08': 'Paid ads. ≥1 campaign with id "campaign_001", ≥1 audience "paud_001", ≥1 creative_pairing "pairing_001". Reference stubbed 04 asset/copy ids.',
-  '09': 'Optimization. data_sources[] all status="ok", data_pull with ≥1 metrics_by_dim row, ≥1 diagnostic, ≥1 decision with diagnostic_ids[≥1], ≥1 applied_change, next_actions.',
+  '01': 'Topic. Required: logline { text, language, hook, twist, payoff, genre }, platform_profile { platform, target_duration_s, aspect, hook_window_s }, target_audience (≥1 AudienceProfile), competitor_cards (≥3 with id comp_NNN), topic_tags (≥3), reference_works (≥1), localization_targets:[]. claim_meta.sources may be [] for synthetic data.',
+  '02': 'Script. Required: structure { template, act_count }, beat_sheet (≥3 with t_s/name/description, first beat t_s≤hook_window_s), scenes (≥1, ids scene_NNN, each with dialogue[] ids dlg_NNN, shot_hints[], audio_cues:[]), characters (≥1, ids char_NNN, ≥1 role=lead), props_required (ids prop_NNN), total_duration_s, language, localization_targets:[].',
+  '03': 'Assets. Required: style_bible { name, refs (≥1 MediaRef), palette (≥3 hex), art_direction }, assets[] (ids asset_NNN/char_NNN, asset_type, master_path), characters[]/scenes[]/props[] each with source_id ∈ upstream 02 ids, shouce_md_path. Use placeholder image paths like ./aisd/03-assets/assets/.../master.png.',
+  '04': 'Storyboard. Required: shots[] (ids shot_NNN, scene_id ∈ 02, duration_s, camera { shot_size, movement }, first_frame_path, asset_refs[≥1] ∈ 03, sfx_marks:[], music_intent:"TBD", subtitle_intent:"unspecified"), first_frames_dir, shotlist_md_path, total_duration_s, aspect.',
+  '05': 'Video. Required: clips[] (clip_id clip_NNN, shot_id ∈ 04, clip_path, provider, duration_s, cut_marks:[], color_intent:"unspecified", speed_intent:"unspecified"), preview_video_path, total_duration_s, aspect, provider_summary { primary_provider }, compliance_tags:["ai_generated"].',
 };
 
 const STUB_TURN_CAP = 4;
@@ -52,8 +50,8 @@ Every top-level array element you create MUST include "synthetic": true (where t
 
 # Placeholders allowed
 - URLs: https://example.com/...
-- SKUs: sku_001, sku_002...
-- Stable ids: keep them simple and consistent
+- Media paths: ./aisd/<NN>-<slug>/.../placeholder.png
+- Stable ids: scene_001 / char_001 / shot_001 / clip_001 — keep them simple and consistent
 
 # Output
 Return ONLY a single JSON object. No prose, no markdown fences. The first character of your response must be \`{\` and the last must be \`}\`. The object must validate against the schema below.

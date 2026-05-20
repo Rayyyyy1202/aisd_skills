@@ -61,13 +61,15 @@ const SAFE_FIELDS: ReadonlyArray<keyof AssetRecord> = [
   'height',
 ];
 
+// .svg intentionally excluded: SVGs can carry <script> and would execute as
+// stored XSS when served inline. Drama assets are raster (gpt-image-1) + video.
 const ALLOWED_UPLOAD_EXT = new Set([
-  '.jpg', '.jpeg', '.png', '.webp', '.avif', '.svg',
+  '.jpg', '.jpeg', '.png', '.webp', '.avif',
   '.mp4', '.webm', '.mov',
 ]);
 
 function loadOutput(workspace: Workspace, registry: SkillRegistry): { path: string; data: OutputBundle } | null {
-  const skill = registry.get('04');
+  const skill = registry.get('03');
   if (!skill) return null;
   const path = workspace.outputJsonPath(skill);
   if (!existsSync(path)) return null;
@@ -123,14 +125,14 @@ function ensureWithin(root: string, candidate: string): string | null {
 }
 
 export function mountAssetRoutes(app: Hono, deps: AssetRoutesDeps): void {
-  // GET /projects/:id/assets — return assets[] from skill 04 output.json
+  // GET /projects/:id/assets — return assets[] from skill 03 output.json
   app.get('/projects/:id/assets', (c) => {
     const project = deps.repo.getProject(c.req.param('id'));
     if (!project) return c.json({ error: 'unknown project' }, 404);
     const ws = new Workspace(project.workspace);
     const out = loadOutput(ws, deps.registry);
     if (!out) return c.json({ assets: [], output_exists: false, workspace: ws.root });
-    const skill = deps.registry.get('04')!;
+    const skill = deps.registry.get('03')!;
     return c.json({
       assets: out.data.assets ?? [],
       output_path: out.path,
@@ -147,7 +149,7 @@ export function mountAssetRoutes(app: Hono, deps: AssetRoutesDeps): void {
     if (!project) return c.json({ error: 'unknown project' }, 404);
     const ws = new Workspace(project.workspace);
     const out = loadOutput(ws, deps.registry);
-    if (!out) return c.json({ error: '04 output.json not found — run skill 04 first' }, 404);
+    if (!out) return c.json({ error: '03 output.json not found — run skill 03 (assets) first' }, 404);
 
     const assetId = c.req.param('asset_id');
     const assets = (out.data.assets ?? []) as AssetRecord[];
@@ -167,7 +169,7 @@ export function mountAssetRoutes(app: Hono, deps: AssetRoutesDeps): void {
     const nextAssets = [...assets.slice(0, idx), next, ...assets.slice(idx + 1)];
     const nextBundle: OutputBundle = { ...out.data, assets: nextAssets };
 
-    const skill = deps.registry.get('04')!;
+    const skill = deps.registry.get('03')!;
     if (skill.schemaPath) {
       const result = deps.validator.validate(skill.schemaPath, nextBundle);
       if (!result.ok) {
@@ -248,7 +250,7 @@ export function mountAssetRoutes(app: Hono, deps: AssetRoutesDeps): void {
       saved,
       skipped,
       next_step_hint:
-        'Re-run skill 04 with --existing-dir=aisd/03-assets/uploads/ to let AI propose tags, or --existing-manifest=<json> if you tagged them yourself.',
+        'Re-run skill 03 (assets) to fold these uploads into the asset pack, or reference them directly in 04 storyboard.',
     });
   });
 
@@ -282,6 +284,10 @@ export function mountAssetRoutes(app: Hono, deps: AssetRoutesDeps): void {
         'content-type': mime,
         'content-length': String(buf.length),
         'cache-control': 'private, max-age=60',
+        // Defense-in-depth: stop MIME sniffing and forbid any script execution
+        // even if an unexpected file type is ever served from this endpoint.
+        'x-content-type-options': 'nosniff',
+        'content-security-policy': "default-src 'none'; sandbox",
       },
     });
   });
@@ -312,8 +318,6 @@ function mimeFromExt(ext: string): string {
       return 'image/webp';
     case '.avif':
       return 'image/avif';
-    case '.svg':
-      return 'image/svg+xml';
     case '.mp4':
       return 'video/mp4';
     case '.webm':

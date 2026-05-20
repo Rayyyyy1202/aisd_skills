@@ -193,7 +193,7 @@ function prettifyJSON(s: string): string {
 
 function PipelineMini({ states, pendingIds }: { states: SkillState[]; pendingIds: Set<string> }) {
   if (states.length === 0) {
-    return <div style={{ color: 'var(--fg-muted)', fontSize: 13 }}>选择品牌以查看流程状态。</div>;
+    return <div style={{ color: 'var(--fg-muted)', fontSize: 13 }}>选择项目以查看流程状态。</div>;
   }
   const requestJump = (s: SkillState) => {
     window.dispatchEvent(

@@ -23,3 +23,4 @@ __pycache__/
 
 # Optional: don't ship test runs
 test-runs/
+*.tsbuildinfo

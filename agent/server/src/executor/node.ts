@@ -148,7 +148,7 @@ function tools(): ChatCompletionTool[] {
         parameters: {
           type: 'object',
           properties: {
-            skill_id: { type: 'string', description: 'e.g. "04", "07a"' },
+            skill_id: { type: 'string', description: 'e.g. "03", "04"' },
             json: { type: 'object', additionalProperties: true, description: 'The JSON object to validate (mutually exclusive with path).' },
             path: { type: 'string', description: 'Workspace-relative path to the JSON file to validate (mutually exclusive with json).' },
           },
@@ -386,11 +386,17 @@ export async function runSkill(
 
   const fs = new WorkspaceFs(workspace.root);
   const shell = new ShellRunner(workspace.root);
-  const imageGen = new ImageGenerator({
-    apiKey: process.env.OPENAI_API_KEY ?? '',
-    baseURL: process.env.OPENAI_BASE_URL,
-    model: process.env.OPENAI_IMAGE_MODEL ?? 'gpt-image-1',
-  });
+  // Only construct the image client when a real key is present — never send a
+  // blank Authorization header (and never to a non-default OPENAI_BASE_URL with
+  // an empty key). generate_image tool calls fail clearly if this is null.
+  const imageApiKey = process.env.OPENAI_API_KEY;
+  const imageGen = imageApiKey
+    ? new ImageGenerator({
+        apiKey: imageApiKey,
+        baseURL: process.env.OPENAI_BASE_URL,
+        model: process.env.OPENAI_IMAGE_MODEL ?? 'gpt-image-1',
+      })
+    : null;
 
   const messages: ChatCompletionMessageParam[] = [
     {
@@ -545,7 +551,7 @@ interface DispatchCtx {
   shell: ShellRunner;
   validator: Validator;
   registry: SkillRegistry;
-  imageGen: ImageGenerator;
+  imageGen: ImageGenerator | null;
   workspaceRoot: string;
   skillId: string;
   emit?: EventEmitter;
@@ -607,6 +613,7 @@ async function dispatch(
       const size = (args.size as string) || '1024x1024';
       const quality = (args.quality as string) || 'medium';
       if (!prompt || !path) return { ok: false, error: 'prompt and path are required' };
+      if (!ctx.imageGen) return { ok: false, error: 'image generation unavailable: OPENAI_API_KEY not set' };
       try {
         const r = await ctx.imageGen.generate({ prompt, size, quality });
         const writeRes = ctx.fs.writeBinaryFile(path, r.bytes);

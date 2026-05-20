@@ -38,14 +38,12 @@ const RULES: Rule[] = [
       ['build', 'dev', 'test', 'typecheck', 'lint', 'install'].includes(a[2] ?? ''),
   },
   {
+    // Inline eval (-e/-p/--eval/--print) is intentionally NOT allowed: it turns the
+    // whitelist into arbitrary code execution (node -e "require('child_process')...").
+    // Only invoking a script file by path is permitted.
     binary: 'node',
-    shape: 'node <ws-relative-script.{js,mjs,ts}>  |  node -e "<script>"  |  node -p "<expr>"',
-    match: (a) =>
-      (typeof a[0] === 'string' && /\.(c?js|mjs|ts|tsx)$/.test(a[0])) ||
-      a[0] === '-e' ||
-      a[0] === '--eval' ||
-      a[0] === '-p' ||
-      a[0] === '--print',
+    shape: 'node <ws-relative-script.{js,mjs,ts}>',
+    match: (a) => typeof a[0] === 'string' && /\.(c?js|mjs|ts|tsx)$/.test(a[0]),
   },
   {
     binary: 'tsx',
@@ -83,7 +81,7 @@ export class ShellRunner {
       };
     }
 
-    if (args.some((a) => a === '..' || a.startsWith('../') || a.includes('/../'))) {
+    if (args.some((a) => a === '..' || a.startsWith('../') || a.includes('/../') || a.endsWith('/..'))) {
       return {
         ok: false,
         code: null,
@@ -103,6 +101,23 @@ export class ShellRunner {
           stderr: '',
           command,
           error: `absolute path outside workspace: ${a}`,
+        };
+      }
+    }
+
+    // `pnpm --dir <path>` lets the LLM choose the working directory; the path
+    // (relative or absolute) MUST resolve inside the workspace, otherwise an
+    // arbitrary package.json elsewhere on disk could be installed/run.
+    if (binary === 'pnpm' && args[0] === '--dir') {
+      const dirArg = args[1] ?? '';
+      if (!pathInsideWorkspace(dirArg, this.workspaceRoot)) {
+        return {
+          ok: false,
+          code: null,
+          stdout: '',
+          stderr: '',
+          command,
+          error: `pnpm --dir path escapes workspace: ${dirArg}`,
         };
       }
     }

@@ -65,7 +65,7 @@ export default function IntegrationsPage() {
               />
               <Section
                 title="推荐接入"
-                subtitle="跑 06 / 07a / 08 / 09 强烈建议接入"
+                subtitle="跑 05 视频 / Phase 2 (06-09) 时建议接入"
                 items={recommended}
                 emptyHint="所有推荐接口都已接入。"
               />
